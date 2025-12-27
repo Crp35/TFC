@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">LectorLibros</string>
+    <string name="titulo_pantalla">Biblioteca</string>
+    <string name="colecciones">Colecciones</string>
+    <string name="descripcion">Menú</string>
+    <string name="biblioteca">Biblioteca</string>
+    <string name="leidos">Leídos</string>
+    <string name="audiolibros">Audiolibros</string>
+    <string name="buscar">Buscar</string>
+    <string name="menu">Menú</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/menu_biblioteca"
+        android:title="@string/biblioteca"
+        android:icon="@drawable/biblioteca"
+        />
+
+    <item
+        android:id="@+id/menu_leidos"
+        android:title="@string/leidos"
+        android:icon="@drawable/libro_leido"
+        />
+
+    <item
+        android:id="@+id/menu_audio"
+        android:title="@string/audiolibros"
+        android:icon="@drawable/cascos"
+        />
+
+    <item
+        android:id="@+id/menu_buscar"
+        android:title="@string/buscar"
+        android:icon="@drawable/lupa"
+        />
+
+</menu>
