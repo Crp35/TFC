@@ -2,7 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    >
+>
 
     <!-- TODO: Update blank fragment layout -->
     <TextView
@@ -14,5 +14,6 @@
         android:layout_gravity="center"
         android:textColor="@android:color/darker_gray"
         />
+
 
 </FrameLayout>

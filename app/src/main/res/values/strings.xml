@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">LectorLibros</string>
+    <string name="app_name">Leo</string>
     <string name="titulo_pantalla">Biblioteca</string>
     <string name="colecciones">Colecciones</string>
     <string name="descripcion">Menú</string>
@@ -8,6 +8,26 @@
     <string name="audiolibros">Audiolibros</string>
     <string name="buscar">Buscar</string>
     <string name="menu">Menú</string>
+    <string name="pdf">PDF</string>
+    <string name="todos">Biblioteca</string>
+    <string name="terminados">Terminados</string>
+    <string name="en_progreso">En progreso</string>
+    <string name="descargados">Descargados</string>
+    <string name="total">Total</string>
+    <string name="titulo_libro">Título</string>
+    <string name="autor_libro">Autor</string>
+    <string name="tipo_libro">Tipo</string>
+    <string name="estado_libro">Estado</string>
+    <string name="mensaje_no_libros">No hay libros que mostrar</string>
+    <string name="mensaje_audiolibros">No hay audiolibros que mostrar</string>
+    <string name="mensaje_error">Error al cargar libros</string>
+    <string name="opcion_seleccion">Selecciona una opción</string>
+    <string name="opcion_terminados">Terminados</string>
+    <string name="opcion_libros">Libros</string>
+
+
+
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

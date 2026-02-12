@@ -2,4 +2,8 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="gray">@color/iconoColor</color>
+    <color name="iconoColor">#FFFFFF</color>
+    <color name="colorTextoFragmentVacio">@color/colorFragmentVacio</color>
+    <color name="colorFragmentVacio">#EEEAEA</color>
 </resources>
