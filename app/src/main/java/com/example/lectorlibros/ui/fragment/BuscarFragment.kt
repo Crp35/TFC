@@ -1,16 +1,26 @@
 package com.example.lectorlibros.ui.fragment
 
+import android.app.AlertDialog
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
+import androidx.lifecycle.lifecycleScope
 import com.example.lectorlibros.R
+import com.example.lectorlibros.data.db.BaseDatos
+import com.example.lectorlibros.data.factory.LibroViewModelFactory
+import com.example.lectorlibros.data.repository.LibroRepository
+import com.example.lectorlibros.data.repository.ServicioDescargaPdf
+import com.example.lectorlibros.ui.enums.TipoCeleccion
+import com.example.lectorlibros.data.factory.LibroViewModel
+import androidx.fragment.app.activityViewModels
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.lectorlibros.ui.adapter.LibrosAdapter
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
 /**
  * A simple [Fragment] subclass.
@@ -18,43 +28,125 @@ private const val ARG_PARAM2 = "param2"
  * create an instance of this fragment.
  */
 class BuscarFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+
+    //OBtenemos el ViewModel de la Activity
+    private val viewModel: LibroViewModel by activityViewModels {
+        LibroViewModelFactory(
+            LibroRepository(
+                requireContext(),
+                BaseDatos.getDatabase(
+                    requireContext()).libroDao(),
+                ServicioDescargaPdf(requireContext())
+        )
+        )
+    }
+
+    private lateinit var buscaLocal: String
+    private lateinit var buscaInternet: String
+    private lateinit var preguntaBuscar: String
+
+    private lateinit var  recyclerView: RecyclerView
+    private lateinit var tvEmpty: TextView
+    private lateinit var adapter: LibrosAdapter
+
+
+
+
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
+
+        buscaLocal = getString(R.string.busquedaLocal)
+        buscaInternet = getString(R.string.busquedaInternet)
+        preguntaBuscar = getString(R.string.preguntaBuscar)
+        mostrarDialogoBusqueda()
     }
+
+   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+       super.onViewCreated(view, savedInstanceState)
+
+       recyclerView = view.findViewById(R.id.rvResultados)
+       tvEmpty = view.findViewById(R.id.tvEmpty)
+
+       recyclerView.layoutManager = LinearLayoutManager(requireContext())
+       adapter = LibrosAdapter(emptyList())
+       recyclerView.adapter = adapter
+
+
+   }
+
+
+
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View{
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_buscar, container, false)
+        return inflater.inflate(
+            R.layout.fragment_buscar,
+            container, false)
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment BuscarFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            BuscarFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    private fun mostrarDialogoBusqueda(){
+        val opciones = arrayOf(
+            buscaLocal,
+            buscaInternet
+        )
+        AlertDialog.Builder(requireContext())
+            .setTitle(preguntaBuscar)
+            .setItems(opciones){ _, which ->
+                when(which){
+                    0 -> buscaEnLocal()
+                    1 -> buscaEnInternet()
+                }
+
+            }
+            .show()
+
+    }
+
+    private fun buscaEnLocal(){
+        //Configuramos RecyclerView
+        lifecycleScope.launchWhenStarted {
+            viewModel.obtenerLibrosPorColeccion(TipoCeleccion.TODOS)
+                .collect { libros ->
+                    if(libros.isEmpty()){
+                        tvEmpty.visibility = View.VISIBLE
+                        recyclerView.visibility = View.GONE
+                    }else{
+                        tvEmpty.visibility = View.GONE
+                        recyclerView.visibility = View.VISIBLE
+                        adapter.actualizarLibros(libros)
+                    }
+
+                    /*libros.forEach {
+                    Log.d("Busqueda_local", "${it.titulo} - ${it.autor}")*/
                 }
             }
+        }
+        /*lifecycleScope.launch {
+            val libros = viewModel.obtenerLibrosPorColeccion(TipoCeleccion.TODOS).first()
+            libros.forEach { libro ->
+                Log.d("Busqueda_local", "${libro.titulo} - ${libro.autor}")
+                //viewModel.cambiarTituloAutor(libro)
+
+                libros.forEach { libro ->
+                    Log.d("Busqueda_local", "${libro.titulo} - ${libro.autor}")
+                }
+            }
+        }*/
+
+
+    private fun buscaEnInternet(){
+
     }
+
 }
+
+
+
+
+

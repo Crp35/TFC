@@ -47,6 +47,8 @@ android {
 }
 
 dependencies {
+
+    implementation("androidx.fragment:fragment-ktx:1.8.9")
     //Lector de PDF
     implementation("com.dmitryborodin:pdfview-android:1.1.0")
    // implementation("com.afreakyelf:pdfview-android:1.0.0")

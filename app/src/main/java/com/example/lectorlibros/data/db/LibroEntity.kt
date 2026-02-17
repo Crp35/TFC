@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.example.lectorlibros.ui.enums.EstadoLibro
 import com.example.lectorlibros.ui.enums.TipoDeLibro
+import java.io.Serializable
 
 @Entity(tableName = "libro")
 data class LibroEntity(
@@ -17,6 +18,9 @@ data class LibroEntity(
     val estado: EstadoLibro = EstadoLibro.NUEVO,
     val descargado: Boolean = false,
     val tipoLibro: TipoDeLibro,
-    val leido: Boolean = false
-)
+    val leido: Boolean = false,
+    val uriPDF: String? = null,
+    val uriAudio: String? = null,
+    var ultimaPosicion: Int = 0
+): Serializable
 

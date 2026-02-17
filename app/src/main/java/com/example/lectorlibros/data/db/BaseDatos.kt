@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import com.example.lectorlibros.data.converter.Conversor
 
 @Database(entities = [LibroEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 /**
@@ -29,7 +29,9 @@ abstract class BaseDatos : RoomDatabase() {
                     context.applicationContext,
                     BaseDatos::class.java,
                     "leo_db"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

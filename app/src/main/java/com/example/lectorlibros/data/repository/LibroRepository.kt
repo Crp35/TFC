@@ -1,57 +1,156 @@
 package com.example.lectorlibros.data.repository
 
+import android.content.Context
+import android.media.MediaMetadataRetriever
+import android.os.Build
+import androidx.annotation.RequiresApi
+import com.example.lectorlibros.R
 import com.example.lectorlibros.data.db.LibroDao
 import com.example.lectorlibros.data.db.LibroEntity
 import com.example.lectorlibros.ui.enums.TipoCeleccion
 import com.example.lectorlibros.ui.enums.TipoDeLibro
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.InputStream
 
-class LibroRepository(private val libroDao: LibroDao) {
+@RequiresApi(Build.VERSION_CODES.Q)
+class LibroRepository(
+    private val contexto: Context,
+    private val libroDao: LibroDao,
+    private val servicioDescargaPdf: ServicioDescargaPdf
+) {
+
+    suspend fun  updateLibro(libro: LibroEntity) {
+        libroDao.updateLibro(libro)
+    }
 
 
-    //Insertar un libro en la BD
-    suspend fun insertLibro(libro: LibroEntity){
+    // Carpeta sandbox para audios
+    private val audioDir: File by lazy {
+        File(contexto.filesDir, "audio").apply { if (!exists()) mkdirs() }
+    }
+
+    // -----------------------
+    // Descarga de PDFs
+    // -----------------------
+    suspend fun descargarLibro(
+        libro: LibroEntity,
+        urlPDF: String
+    ) {
+        val uri = servicioDescargaPdf.descargarPDF(urlPDF, libro.titulo)
+        uri?.let {
+            val libroActualizado = libro.copy(
+                descargado = true,
+                uriPDF = it.toString()
+            )
+            libroDao.insertLibro(libroActualizado)
+        }
+    }
+
+    // -----------------------
+    // Guardar audio en sandbox + BD
+    // -----------------------
+    suspend fun guardarAudio(
+        titulo: String,
+        autor: String,
+        origen: InputStream,      // InputStream de raw o descarga
+        nombreArchivo: String     // nombre final en sandbox
+    ): LibroEntity = withContext(Dispatchers.IO) {
+        // Copiar archivo al sandbox
+        val archivoDestino = File(audioDir, nombreArchivo)
+        origen.use { input ->
+            archivoDestino.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        // Crear entidad y guardar en BD
+        val libro = LibroEntity(
+            titulo = titulo,
+            autor = autor,
+            tipoLibro = TipoDeLibro.AUDIO,
+            uriAudio = archivoDestino.absolutePath,
+            descargado = true
+        )
+        libroDao.insertLibro(libro)
+        libro
+    }
+
+    // -----------------------
+    // Funciones de inserción y consulta
+    // -----------------------
+    suspend fun insertLibro(libro: LibroEntity) {
         libroDao.insertLibro(libro)
     }
 
-    //Obtener todos los libros
     fun getAllLibros(): Flow<List<LibroEntity>> = libroDao.getAllLibros()
-
-
-    //Obtener libros en formato PDF
     fun getLibrosPDF(): Flow<List<LibroEntity>> = libroDao.getLibrosPDF()
-
-    //Obtener libros en formato Audio
     fun getLibrosAudio(): Flow<List<LibroEntity>> = libroDao.getLibrosAudio()
 
-    //Actualizar un libro
-    suspend fun cambiarTituloAutor(libro: LibroEntity){
+    suspend fun cambiarTituloAutor(libro: LibroEntity) {
         libroDao.updateLibro(libro.id, libro.titulo, libro.autor)
-        }
+    }
 
-    //Obtener un libro por título
-    suspend fun  getLibroByTitulo(titulo: String) = libroDao.getLibroByTitulo(titulo)
-
-    //Obtener un libro por autor
+    suspend fun getLibroByTitulo(titulo: String) = libroDao.getLibroByTitulo(titulo)
     suspend fun getLibroByAutor(autor: String) = libroDao.getLibroByAutor(autor)
 
-    //Contadores unificados
-    suspend fun contarLibros(tipo: TipoCeleccion): Int{
-        return when(tipo){
+    suspend fun contarLibros(tipo: TipoCeleccion): Int {
+        return when (tipo) {
             TipoCeleccion.TODOS -> libroDao.countTotalLibros()
             TipoCeleccion.DESCARGADOS -> libroDao.countTotalLibrosDescargados()
             TipoCeleccion.TERMINADOS -> libroDao.countLibrosLeidos()
             TipoCeleccion.PDF -> libroDao.countLibrosTotalLibrosPDF()
             TipoCeleccion.AUDIO -> libroDao.countLibrosTotalLibrosAudio()
         }
-
     }
 
+    // -----------------------
+    // POBLAR BD CON TODOS LOS AUDIOS DE RAW
+    // -----------------------
+    suspend fun poblarBDDesdeRaw() = withContext(Dispatchers.IO) {
+        // Lista de todos los audios de raw
+        val todosLosAudiosRaw = arrayOf(
+            R.raw.sutras,
+            // Agrega aquí más audios de raw según necesites
+            // R.raw.otro_audio
+        )
 
+        for (resId in todosLosAudiosRaw) {
+            try {
+                val afd = contexto.resources.openRawResourceFd(resId) ?: continue
+                val retriever = MediaMetadataRetriever()
+                retriever.setDataSource(afd.fileDescriptor, afd.startOffset, afd.length)
 
-    //Función de prueba para insertar libros en la BD
+                // Extraer metadata
+                val titulo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
+                    ?: contexto.resources.getResourceEntryName(resId)  // fallback: nombre del recurso
+                val autor = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_AUTHOR)
+                    ?: contexto.getString(R.string.nombreAutor)
+
+                // Copiar archivo al sandbox
+                contexto.resources.openRawResource(resId).use { input ->
+                    val nombreArchivo = "${titulo.replace(" ", "_")}.mp3"
+                    guardarAudio(titulo, autor, input, nombreArchivo)
+                }
+
+                retriever.release()
+                afd.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    // -----------------------
+    // Función de prueba para insertar libros
+    // -----------------------
     suspend fun pruebaInsertarLibros() {
-        if (libroDao.countTotalLibros() == 0) {
+        if (libroDao.countLibrosTotalLibrosAudio() == 0) {
+            poblarBDDesdeRaw()
+
+            // PDF de prueba
             insertLibro(
                 LibroEntity(
                     titulo = "El principito",
@@ -59,33 +158,7 @@ class LibroRepository(private val libroDao: LibroDao) {
                     tipoLibro = TipoDeLibro.PDF
                 )
             )
-
-            insertLibro(
-                LibroEntity(
-                    titulo = "La llamada de Cthulhu",
-                    autor = "H. P. Lovecraft",
-                    tipoLibro = TipoDeLibro.AUDIO
-                )
-            )
-
-            insertLibro(
-                LibroEntity(
-                    titulo = "El señor de los anillos",
-                    autor = "J. R. R. Tolkien",
-                    tipoLibro = TipoDeLibro.PDF
-                )
-            )
-
         }
-
     }
 
 }
-
-
-
-
-
-
-
-

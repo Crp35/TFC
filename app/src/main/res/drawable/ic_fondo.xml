@@ -1,0 +1,42 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="1024dp"
+    android:height="1024dp"
+    android:viewportWidth="1024"
+    android:viewportHeight="1024">
+  <path
+      android:pathData="M387,307.5L637,307.5A17.5,17.5 0,0 1,654.5 325L654.5,508A17.5,17.5 0,0 1,637 525.5L387,525.5A17.5,17.5 0,0 1,369.5 508L369.5,325A17.5,17.5 0,0 1,387 307.5z"
+      android:strokeWidth="15"
+      android:fillColor="#00000000"
+      android:strokeColor="#000000"/>
+  <path
+      android:pathData="M512,645m-67.5,0a67.5,67.5 0,1 1,135 0a67.5,67.5 0,1 1,-135 0"
+      android:strokeWidth="15"
+      android:fillColor="#00000000"
+      android:strokeColor="#000000"/>
+  <path
+      android:pathData="M512.5,645.5m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0"
+      android:strokeWidth="15"
+      android:fillColor="#00000000"
+      android:strokeColor="#000000"/>
+  <path
+      android:pathData="M344,261.5L680,261.5A17.5,17.5 0,0 1,697.5 279L697.5,744A17.5,17.5 0,0 1,680 761.5L344,761.5A17.5,17.5 0,0 1,326.5 744L326.5,279A17.5,17.5 0,0 1,344 261.5z"
+      android:strokeWidth="15"
+      android:fillColor="#00000000"
+      android:strokeColor="#000000"/>
+  <path
+      android:pathData="M568.7,460.5V440.8V376M470.8,469V440.8V397.3M470.8,397.3V371.7L568.7,351V376M470.8,397.3L568.7,376"
+      android:strokeWidth="10"
+      android:fillColor="#00000000"
+      android:strokeColor="#000000"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M568.4,460.8C568.6,461.7 568.2,463.9 564.8,466.7C561.5,469.5 556.4,471.9 550.2,473.3C544,474.6 538.3,474.4 534.2,473.3C529.9,472.1 528.7,470.3 528.5,469.4C528.3,468.5 528.7,466.3 532.1,463.5C535.4,460.7 540.5,458.2 546.7,456.9C552.9,455.6 558.6,455.8 562.6,456.9C567,458.1 568.2,459.9 568.4,460.8Z"
+      android:strokeWidth="10"
+      android:fillColor="#00000000"
+      android:strokeColor="#000000"/>
+  <path
+      android:pathData="M470.5,469.3C470.7,470.2 470.4,472.4 466.9,475.2C463.7,478 458.6,480.5 452.4,481.8C446.2,483.1 440.5,482.9 436.4,481.8C432.1,480.6 430.9,478.8 430.7,477.9C430.5,477 430.9,474.8 434.3,472C437.5,469.2 442.6,466.7 448.9,465.4C455.1,464.1 460.8,464.3 464.8,465.4C469.1,466.6 470.3,468.4 470.5,469.3Z"
+      android:strokeWidth="10"
+      android:fillColor="#00000000"
+      android:strokeColor="#000000"/>
+</vector>

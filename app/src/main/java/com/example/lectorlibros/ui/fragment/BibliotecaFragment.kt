@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import com.example.lectorlibros.R
+import com.example.lectorlibros.data.repository.LibroRepository
 import com.example.lectorlibros.databinding.FragmentPdfBinding
 
 /**
@@ -16,6 +17,9 @@ import com.example.lectorlibros.databinding.FragmentPdfBinding
  */
 class BibliotecaFragment : Fragment() {
     private  var _binding: FragmentPdfBinding? = null
+
+    lateinit var repository: LibroRepository
+
     private val binding get() = _binding!!
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -28,11 +32,6 @@ class BibliotecaFragment : Fragment() {
 
         tvEmpty.text = getString(R.string.mensaje_no_libros)
 
-
-
-
-
-
     }
 
     override fun onCreateView(
@@ -42,7 +41,13 @@ class BibliotecaFragment : Fragment() {
     ): View {
 
         //_binding = FragmentPdfBinding.inflate(inflater, container, false)
-        return inflater.inflate(R.layout.fragment_biblioteca, container, false)
+        _binding = FragmentPdfBinding.inflate(
+            inflater,
+            container,
+            false
+            )
+        return binding.root
+
     }
 
     override fun onDestroyView() {
@@ -50,23 +55,13 @@ class BibliotecaFragment : Fragment() {
         _binding = null
     }
 
-    /*companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment PdfFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            PdfFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
-    }*/
+    companion object {
+        fun newInstance(repository: LibroRepository) : BibliotecaFragment {
+            val fragment = BibliotecaFragment()
+            fragment.repository = repository
+            return fragment
+        }
+
+    }
+
 }

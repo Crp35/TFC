@@ -84,5 +84,16 @@ interface LibroDao {
     @Query("DELETE FROM libro WHERE id = :id")
     suspend fun deleteLibroById(id: Long)
 
+    /**
+     * Método que actualiza la posición del audio
+     * */
+    @Query("UPDATE libro SET posicionMs = :posicionMs WHERE id = :id")
+    suspend fun actualizarPosicionAudio(id: Long, posicionMs: Long)
+
+    @Update
+    suspend fun updateLibro(libro: LibroEntity)
+
+
+
 
 }

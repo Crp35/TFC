@@ -11,10 +11,11 @@ import androidx.lifecycle.lifecycleScope
 import com.example.lectorlibros.data.db.BaseDatos
 import com.example.lectorlibros.data.factory.LibroViewModelFactory
 import com.example.lectorlibros.data.repository.LibroRepository
+import com.example.lectorlibros.data.repository.ServicioDescargaPdf
 import com.example.lectorlibros.databinding.FragmentColeccionesBinding
 import com.example.lectorlibros.ui.adapter.LibrosAdapter
 import com.example.lectorlibros.ui.enums.TipoCeleccion
-import com.example.lectorlibros.ui.viewModel.LibroViewModel
+import com.example.lectorlibros.data.factory.LibroViewModel
 import kotlinx.coroutines.launch
 
 /**
@@ -75,9 +76,14 @@ class ColeccionesFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
        // val libroDao = BaseDatos.getDatabase(requireContext()).libroDao()
-        val repository = LibroRepository(BaseDatos.getDatabase(
+        val servicioDescargaPdf = ServicioDescargaPdf(requireContext())
+        val repository = LibroRepository(
+            requireContext(),
+            BaseDatos.getDatabase(
             requireContext())
-            .libroDao())
+            .libroDao(),
+            servicioDescargaPdf
+        )
         val factory = LibroViewModelFactory(repository)
         viewModel = ViewModelProvider(this, factory)[LibroViewModel::class.java]
         mostrarLibros(tipoCeleccion)

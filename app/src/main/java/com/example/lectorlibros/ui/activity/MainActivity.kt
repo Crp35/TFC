@@ -4,26 +4,37 @@ import android.app.AlertDialog
 import android.os.Bundle
 import android.view.MenuItem
 import android.widget.TextView
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.lectorlibros.R
 import com.example.lectorlibros.data.db.BaseDatos
+import com.example.lectorlibros.data.factory.LibroViewModelFactory
 import com.example.lectorlibros.data.repository.LibroRepository
+import com.example.lectorlibros.data.repository.ServicioDescargaPdf
 import com.example.lectorlibros.databinding.ActivityMainBinding
 import com.example.lectorlibros.ui.adapter.ColeccionAdapter
 import com.example.lectorlibros.ui.enums.TipoCeleccion
-import com.example.lectorlibros.ui.fragment.AudioLibrosFragment
+import com.example.lectorlibros.ui.fragments.AudioLibrosFragment
 import com.example.lectorlibros.ui.fragment.BibliotecaFragment
 import com.example.lectorlibros.ui.fragment.BuscarFragment
 import com.example.lectorlibros.ui.fragment.ColeccionesFragment
 import com.example.lectorlibros.ui.fragment.LeidosFragment
 import com.example.lectorlibros.ui.fragment.PdfFragment
+import com.example.lectorlibros.data.factory.LibroViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     lateinit var binding: ActivityMainBinding
+    private lateinit var repository: LibroRepository
+
+
+
+    private val viewModel: LibroViewModel by viewModels {
+        LibroViewModelFactory(repository)
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,7 +44,18 @@ class MainActivity : AppCompatActivity() {
 
         //Iniciamos DAO y Repository
         val libroDao = BaseDatos.getDatabase(this).libroDao()
-        val repository = LibroRepository(libroDao)
+        val servicioDescargaPdf = ServicioDescargaPdf(this)
+        //val database = BaseDatos.getDatabase(this)
+        repository = LibroRepository(this,libroDao, servicioDescargaPdf)
+
+        setContentView(binding.root)
+        //Cargamos el fragment inicial
+        cargarFragment(BibliotecaFragment())
+
+
+
+
+
 
 
 
@@ -59,19 +81,6 @@ class MainActivity : AppCompatActivity() {
             mostrarOpcionesColecciones()
         }
 
-
-        //Listener de la barra de navegación inferior
-       /* binding.bottomNavigation.setOnItemSelectedListener {
-            binding.bottomNavigation.selectedItemId = R.id.menu_biblioteca
-            /*menuItem ->
-            //Llamamos a la función onNavigationItemSelected
-            onNavigationItemSelected(menuItem)*/
-        } DESCOMENTAR SI ERROR*/
-
-        /*supportFragmentManager.beginTransaction()
-            .replace(R.id.fragmentContainer, ColeccionesFragment())
-            .commit() DESCOMENTAR SI ERROR*/
-
         //Listener del botón de menú
         binding.ivMenu.setOnClickListener {
             mostrarOpcionesColecciones()
@@ -80,17 +89,11 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-
-
     //Función para cargar el fragment inicial
     fun cargarFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
             .commit()
-        //binding.bottomNavigation.selectedItemId = R.id.menu_biblioteca
-
-
-
     }
 
     //Función para el listener de la barra de navegación inferior
@@ -98,18 +101,15 @@ class MainActivity : AppCompatActivity() {
 
         //Elegir qué fragment cargar
         val fragment = when (menuItem.itemId) {
-            R.id.menu_biblioteca -> BibliotecaFragment()
+            R.id.menu_biblioteca -> BibliotecaFragment.newInstance(repository)
             R.id.menu_leidos -> LeidosFragment()
-            R.id.menu_audio -> AudioLibrosFragment()
+            R.id.menu_audio -> AudioLibrosFragment(repository)
             R.id.menu_buscar -> BuscarFragment()
             else -> null
         }
 
         //Si fragment no es nulo, cargarlo( hacemos el reemplazo)
         fragment?.let {
-            /*supportFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, it )
-                .commit() DESCOMENTAR SI ERROR*/
             cargarFragment(it)
             return true //Manejamos el click
         }
@@ -174,7 +174,6 @@ class MainActivity : AppCompatActivity() {
                 mostrarColeccionFragment(tipo)
 
             }
-            //.create()
             .show()
     }
 
@@ -190,15 +189,9 @@ class MainActivity : AppCompatActivity() {
         android.util.Log.d("PDF_DEBUG", "TIPO SELECCIONADO: $tipo")
         if (tipo == TipoCeleccion.PDF){
             android.util.Log.d("PDF_DEBUG", "CARGANDO PDF")
-               /* supportFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, PdfFragment())
-                .commit()DESCOMENTAR SI ERROR*/
             cargarFragment(PdfFragment())
         }else{
             val fragment = ColeccionesFragment.newInstance(tipo)
-            /*supportFragmentManager.beginTransaction()
-                .replace(R.id.fragmentContainer, fragment)
-                .commit()DESCOMENTAR SI ERROR*/
             cargarFragment(fragment)
         }
 

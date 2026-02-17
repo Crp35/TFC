@@ -19,13 +19,24 @@
     <string name="tipo_libro">Tipo</string>
     <string name="estado_libro">Estado</string>
     <string name="mensaje_no_libros">No hay libros que mostrar</string>
+    <string name="mensaje_no_aulibros">No hay libros que mostrar</string>
     <string name="mensaje_audiolibros">No hay audiolibros que mostrar</string>
     <string name="mensaje_error">Error al cargar libros</string>
     <string name="opcion_seleccion">Selecciona una opción</string>
     <string name="opcion_terminados">Terminados</string>
     <string name="opcion_libros">Libros</string>
-
-
+    <string name="busquedaLocal">Buscar en local</string>
+    <string name="busquedaInternet">Buscar en internet</string>
+    <string name="preguntaBuscar">¿Dónde quieres buscar?</string>
+    <string name="sinResultados">No hay resultados</string>
+    <string name="opcion_audiolibros">Audiolibros</string>
+    <string name="opcion_pdf">PDF</string>
+    <string name="max">100</string>
+    <string name="tiempoInicial">00:00</string>
+    <string name="btnPause">Pause</string>
+    <string name="btnPlay">Play</string>
+    <string name="faltaTitulo">Título desconocido</string>
+    <string name="nombreAutor">Autor desconocido</string>
 
 
     <!-- TODO: Remove or change this placeholder text -->
