@@ -1,152 +1,271 @@
 package com.example.lectorlibros.ui.fragment
 
-import android.app.AlertDialog
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.TextView
+import android.widget.Toast
+import android.widget.PopupMenu
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.lifecycleScope
 import com.example.lectorlibros.R
 import com.example.lectorlibros.data.db.BaseDatos
 import com.example.lectorlibros.data.factory.LibroViewModelFactory
 import com.example.lectorlibros.data.repository.LibroRepository
 import com.example.lectorlibros.data.repository.ServicioDescargaPdf
-import com.example.lectorlibros.ui.enums.TipoCeleccion
 import com.example.lectorlibros.data.factory.LibroViewModel
 import androidx.fragment.app.activityViewModels
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.lectorlibros.entities.LibroEntity
+import com.example.lectorlibros.ui.activity.MainActivity
 import com.example.lectorlibros.ui.adapter.LibrosAdapter
+import com.example.lectorlibros.ui.enums.TipoDeLibro
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
-
-/**
- * A simple [Fragment] subclass.
- * Use the [BuscarFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
+@RequiresApi(Build.VERSION_CODES.Q)
 class BuscarFragment : Fragment() {
 
-    //OBtenemos el ViewModel de la Activity
     private val viewModel: LibroViewModel by activityViewModels {
         LibroViewModelFactory(
             LibroRepository(
                 requireContext(),
-                BaseDatos.getDatabase(
-                    requireContext()).libroDao(),
+                BaseDatos.getDatabase(requireContext()).libroDao(),
                 ServicioDescargaPdf(requireContext())
-        )
+            )
         )
     }
 
-    private lateinit var buscaLocal: String
-    private lateinit var buscaInternet: String
-    private lateinit var preguntaBuscar: String
-
-    private lateinit var  recyclerView: RecyclerView
+    private lateinit var recyclerView: RecyclerView
     private lateinit var tvEmpty: TextView
+    private lateinit var searchView: SearchView
     private lateinit var adapter: LibrosAdapter
 
+    private val listaLibros = mutableListOf<LibroEntity>()
 
+    // Control de búsquedas activas
+    private var collectJob: Job? = null
 
-
-
-
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        buscaLocal = getString(R.string.busquedaLocal)
-        buscaInternet = getString(R.string.busquedaInternet)
-        preguntaBuscar = getString(R.string.preguntaBuscar)
-        mostrarDialogoBusqueda()
+    private val repository by lazy {
+        LibroRepository(
+            requireContext(),
+            BaseDatos.getDatabase(requireContext()).libroDao(),
+            ServicioDescargaPdf(requireContext())
+        )
     }
-
-   override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-       super.onViewCreated(view, savedInstanceState)
-
-       recyclerView = view.findViewById(R.id.rvResultados)
-       tvEmpty = view.findViewById(R.id.tvEmpty)
-
-       recyclerView.layoutManager = LinearLayoutManager(requireContext())
-       adapter = LibrosAdapter(emptyList())
-       recyclerView.adapter = adapter
-
-
-   }
-
-
-
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View{
-        // Inflate the layout for this fragment
-        return inflater.inflate(
-            R.layout.fragment_buscar,
-            container, false)
+    ): View {
+        return inflater.inflate(R.layout.fragment_buscar, container, false)
     }
 
-    private fun mostrarDialogoBusqueda(){
-        val opciones = arrayOf(
-            buscaLocal,
-            buscaInternet
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Inicializar vistas
+        recyclerView = view.findViewById(R.id.rvResultados)
+        tvEmpty = view.findViewById(R.id.tvEmpty)
+        searchView = view.findViewById(R.id.searchView)
+        searchView.queryHint = getString(R.string.bucar_libro)
+
+        // Configuración de 2 columnas
+        recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
+
+        // SOLUCIÓN: Adaptar la inicialización a los 4 parámetros del LibrosAdapter
+        adapter = LibrosAdapter(
+            listaLibros,
+            this,
+            { libro -> abrirLibro(libro) }, // onItemClick
+            { libro, viewAncla -> showPopupMenu(libro, viewAncla) } // onOpcionesClick
         )
-        AlertDialog.Builder(requireContext())
-            .setTitle(preguntaBuscar)
-            .setItems(opciones){ _, which ->
-                when(which){
-                    0 -> buscaEnLocal()
-                    1 -> buscaEnInternet()
-                }
+        recyclerView.adapter = adapter
 
-            }
-            .show()
+        // Configurar búsqueda en tiempo real
+        configurarBusqueda()
 
+        // Capturar el botón de la X en el SearchView para que actúe como "Cancelar"
+        val closeButton = searchView.findViewById<View>(
+            androidx.appcompat.R.id.search_close_btn
+        )
+
+        closeButton.setOnClickListener {
+            // Limpiar texto y quitar foco
+            searchView.setQuery("", false)
+            searchView.clearFocus()
+
+            // Volver a la BibliotecaFragment
+            val activity = activity as? MainActivity
+            activity?.cargarFragment(BibliotecaFragment.newInstance(repository))
+        }
     }
 
-    private fun buscaEnLocal(){
-        //Configuramos RecyclerView
-        lifecycleScope.launchWhenStarted {
-            viewModel.obtenerLibrosPorColeccion(TipoCeleccion.TODOS)
-                .collect { libros ->
-                    if(libros.isEmpty()){
-                        tvEmpty.visibility = View.VISIBLE
-                        recyclerView.visibility = View.GONE
-                    }else{
-                        tvEmpty.visibility = View.GONE
-                        recyclerView.visibility = View.VISIBLE
-                        adapter.actualizarLibros(libros)
-                    }
+    // Nueva función para el menú CRUD dentro de BuscarFragment
+    fun showPopupMenu(libro: LibroEntity, ancla: View) {
+        val popup = PopupMenu(requireContext(), ancla)
+        popup.inflate(R.menu.menu_item_libro)
 
-                    /*libros.forEach {
-                    Log.d("Busqueda_local", "${it.titulo} - ${it.autor}")*/
+        popup.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.action_rename -> {
+                    mostrarDialogoRenombrar(libro)
+                    true
                 }
+
+                R.id.action_delete -> {
+                    confirmarEliminacion(libro)
+                    true
+                }
+                else -> false
             }
         }
-        /*lifecycleScope.launch {
-            val libros = viewModel.obtenerLibrosPorColeccion(TipoCeleccion.TODOS).first()
-            libros.forEach { libro ->
-                Log.d("Busqueda_local", "${libro.titulo} - ${libro.autor}")
-                //viewModel.cambiarTituloAutor(libro)
-
-                libros.forEach { libro ->
-                    Log.d("Busqueda_local", "${libro.titulo} - ${libro.autor}")
-                }
-            }
-        }*/
-
-
-    private fun buscaEnInternet(){
-
+        popup.show()
     }
 
+    // Inicion método para mostrar diálogo renombrar libros
+
+    private fun mostrarDialogoRenombrar(libro: LibroEntity) {
+        val abortar = getString(R.string.cancelar)
+        val salvarEdicion = getString(R.string.gurdar_libro)
+        val textString = getString(R.string.renombrar_libro)
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle(textString)
+
+        // Creamos el campo de texto
+        val input = EditText(requireContext())
+        input.setText(libro.titulo) // Pre-rellenamos con el título actual
+        input.selectAll() // Seleccionamos todo el texto para facilitar la edición
+
+        // Un contenedor para un diseño más bonito
+        val container = FrameLayout(requireContext())
+        val params = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        params.setMargins(60,20,60,0) // Izquierda, Arriba, Derecha, Abajo
+        input.layoutParams = params
+        container.addView(input)
+        builder.setPositiveButton(salvarEdicion) { _, _ ->
+            val nuevoTitulo = input.text.toString().trim()
+            if(nuevoTitulo.isNotEmpty()) {
+                // Ejecutamos la actualización en una corrutina
+                viewLifecycleOwner.lifecycleScope.launch {
+                    repository.renombrarLibros(libro.id, nuevoTitulo, libro.autor)
+                    Toast.makeText(requireContext(), "Título cambiado", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+        }
+        builder.setNegativeButton(getString(R.string.cancelar), null)
+        builder.setView(container) // Si error en la compilación prueba a borrar
+        builder.show()
+    }
+    // Fin método para mostrar diálogo renombrar libros
+
+
+    // Nueva función para confirmar eliminación
+    private fun confirmarEliminacion(libro: LibroEntity) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Eliminar libro")
+            .setMessage("¿Estás seguro de eliminar '${libro.titulo}'?")
+            .setPositiveButton("Eliminar") { _, _ ->
+                lifecycleScope.launch {
+                    repository.deleteLibro(libro)
+                    Toast.makeText(requireContext(), "Libro eliminado", Toast.LENGTH_SHORT).show()
+                    // Refrescar resultados
+                    buscaEnLocal(searchView.query.toString())
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
+    private fun configurarBusqueda() {
+        searchView.isIconified = false
+
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                query?.let { buscaEnLocal(it) }
+                return true
+            }
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                val texto = newText?.trim() ?: ""
+
+                if (texto.isEmpty()) {
+                    // Cancelar búsquedas activas
+                    collectJob?.cancel()
+
+                    // Limpiar lista y mostrar mensaje de vacío
+                    listaLibros.clear()
+                    adapter.actualizarLibros(emptyList())
+                    tvEmpty.visibility = View.VISIBLE
+                    recyclerView.visibility = View.GONE
+                    return true
+                }
+
+                // Ejecutar búsqueda en local
+                buscaEnLocal(texto)
+                return true
+            }
+        })
+    }
+
+    private fun buscaEnLocal(titulo: String) {
+        collectJob?.cancel()
+
+        // Lanzar un job para recoger resultados en tiempo real
+        collectJob = lifecycleScope.launch {
+            viewModel.buscarLibrosPorTitulo("%$titulo%") // Búsqueda parcial
+                .collectLatest { libros ->
+                    if (libros.isEmpty()) {
+                        tvEmpty.visibility = View.VISIBLE
+                        recyclerView.visibility = View.GONE
+                    } else {
+                        tvEmpty.visibility = View.GONE
+                        recyclerView.visibility = View.VISIBLE
+
+                        listaLibros.clear()
+                        listaLibros.addAll(libros)
+                        adapter.actualizarLibros(libros)
+
+                        // Ocultamos el teclado tras obtener el resultado
+                        val imm = requireContext().getSystemService(
+                            android.content.Context.INPUT_METHOD_SERVICE
+                        ) as android.view.inputmethod.InputMethodManager
+                        imm.hideSoftInputFromWindow(view?.windowToken, 0)
+                    }
+                }
+        }
+    }
+
+    private fun abrirLibro(libro: LibroEntity) {
+        val activity = activity as? MainActivity
+
+        when (libro.tipoLibro) {
+            TipoDeLibro.PDF -> activity?.cargarFragment(PdfFragment.newInstance(libro.titulo))
+            TipoDeLibro.AUDIO -> activity?.cargarFragment(AudioPlayerFragment.newInstance(libro.id, repository))
+            TipoDeLibro.EPUB -> {
+                // Futuro: EpubFragment
+            }
+        }
+
+        activity?.binding?.tvTitulo?.text = libro.titulo
+    }
+
+    private fun buscaEnInternet() {
+        // Futuro: Implementar búsqueda en internet
+    }
 }
-
-
-
-
-

@@ -2,23 +2,23 @@ package com.example.lectorlibros.ui.adapter
 
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.lectorlibros.R
-import com.example.lectorlibros.data.db.LibroEntity
+import com.example.lectorlibros.entities.LibroEntity
 import com.example.lectorlibros.databinding.ItemAudioBinding
-import com.example.lectorlibros.ui.fragments.AudioPlayerFragment
-import com.example.lectorlibros.data.repository.LibroRepository
-import androidx.fragment.app.Fragment
+
 
 class AudioAdapter(
-    private val repository: LibroRepository
+    private val onItemClick: ((LibroEntity) -> Unit)? = null
 ) : ListAdapter<LibroEntity, AudioAdapter.AudioViewHolder>(DiffCallback()) {
 
-    inner class AudioViewHolder(val binding: ItemAudioBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class AudioViewHolder(val binding: ItemAudioBinding) : RecyclerView.ViewHolder(
+        binding.root) {
 
         fun bind(libro: LibroEntity) {
             binding.tvTitle.text = libro.titulo
@@ -36,20 +36,17 @@ class AudioAdapter(
                         binding.imgCover.setImageResource(R.drawable.ic_icon2_background)
                     }
                     retriever.release()
-                } catch (e: Exception) {
+                } catch (ex: Exception) {
+                    Log.e("AudioAdapter", "Error obteniendo artwork del audio: ${ex.message}", ex)
                     binding.imgCover.setImageResource(R.drawable.ic_icon2_background)
                 }
             } else {
                 binding.imgCover.setImageResource(R.drawable.ic_icon2_background)
             }
 
-            // Este es el cambio, pasamos el repository al fragmento
             binding.root.setOnClickListener {
-                val fragment = AudioPlayerFragment.newInstance(libro, repository) // Aquí pasamos el libro y el repository
-                fragment.parentFragmentManager.beginTransaction()
-                    .replace(R.id.fragmentContainer, fragment)
-                    .addToBackStack(null)
-                    .commit()
+                Log.d("AudioAdapter", "Item clicked: id=${libro.id} title=${libro.titulo}")
+                onItemClick?.invoke(libro)
             }
         }
     }
@@ -64,7 +61,9 @@ class AudioAdapter(
     }
 
     override fun onBindViewHolder(holder: AudioViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        val libro = getItem(position)
+        holder.binding.root.setOnClickListener { onItemClick?.invoke(libro) }
+        //holder.bind(getItem(position))
     }
 
     class DiffCallback : DiffUtil.ItemCallback<LibroEntity>() {

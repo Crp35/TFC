@@ -20,6 +20,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64"))
+        }
     }
 
     buildTypes {
@@ -50,8 +53,9 @@ dependencies {
 
     implementation("androidx.fragment:fragment-ktx:1.8.9")
     //Lector de PDF
-    implementation("com.dmitryborodin:pdfview-android:1.1.0")
-   // implementation("com.afreakyelf:pdfview-android:1.0.0")
+    implementation(libs.pdfview.android)
+    implementation(libs.androidx.ui.test)
+    // implementation("com.afreakyelf:pdfview-android:1.0.0")
     val room_version = "2.6.1"
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

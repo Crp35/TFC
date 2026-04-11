@@ -1,6 +1,6 @@
 package com.example.lectorlibros.ui.enums
 
-enum class TipoCeleccion {
+enum class TipoColeccion {
     TODOS,
     DESCARGADOS,
    TERMINADOS,

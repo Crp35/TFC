@@ -33,10 +33,25 @@
     <string name="opcion_pdf">PDF</string>
     <string name="max">100</string>
     <string name="tiempoInicial">00:00</string>
+    <string name="tiempoTotal">00:00</string>
     <string name="btnPause">Pause</string>
     <string name="btnPlay">Play</string>
     <string name="faltaTitulo">Título desconocido</string>
     <string name="nombreAutor">Autor desconocido</string>
+    <string name="página"> 0 / 0 </string>
+    <string name="indicador_pagina">Página %1$d de %2$d</string>
+    <string name="estadoLibro">Nuevo</string>
+    <string name="bucar_libro">¿Qué estás buscando?</string>
+    <string name="renombrar_libro">Renombrer...</string>
+    <string name="eliminar_libro">Eliminar...</string>
+    <string name="importar_libro">Importar...</string>
+    <string name="descargar_libro">Descargar...</string>
+    <string name="gurdar_libro">Guardar</string>
+    <string name="cancelar">Cancelar</string>
+
+
+
+
 
 
     <!-- TODO: Remove or change this placeholder text -->

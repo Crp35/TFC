@@ -6,9 +6,11 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.lectorlibros.data.converter.Conversor
+import com.example.lectorlibros.entities.LecturaLibro
+import com.example.lectorlibros.entities.LibroEntity
 
-@Database(entities = [LibroEntity::class],
-    version = 2,
+@Database(entities = [LibroEntity::class, LecturaLibro::class],
+    version = 4,
     exportSchema = false
 )
 /**
@@ -18,6 +20,7 @@ import com.example.lectorlibros.data.converter.Conversor
 @TypeConverters(Conversor::class)
 abstract class BaseDatos : RoomDatabase() {
     abstract fun libroDao(): LibroDao
+    abstract fun lecturaLibroDao(): LecturaLibroDao
 
     companion object {
         @Volatile

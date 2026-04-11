@@ -1,7 +1,4 @@
-package com.example.lectorlibros.ui.adapter
-
 import android.content.Context
-import android.provider.Settings.Global.getString
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +13,9 @@ class ColeccionAdapter(
     private val iconos: Array<Int>
 ) : ArrayAdapter<String>(context, R.layout.item_coleccion, titulos) {
 
+    // Listener externo
+    var onItemClick: ((position: Int, titulo: String) -> Unit)? = null
+
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val inflater = LayoutInflater.from(context)
         val view = convertView ?: inflater.inflate(R.layout.item_coleccion,
@@ -27,10 +27,11 @@ class ColeccionAdapter(
         imageIcono.setImageResource(iconos[position])
         textView.text = titulos[position]
 
+        // Listener de clic en cada fila
+        view.setOnClickListener {
+            onItemClick?.invoke(position, titulos[position])
+        }
+
         return view
     }
-
-
 }
-
-

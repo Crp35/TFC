@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_rename"
+        android:title="@string/renombrar_libro"
+        android:src="@drawable/ic_editar"/>
+    <item
+        android:id="@+id/action_download"
+        android:title="@string/descargar_libro"
+        android:src="@drawable/ic_descargar"/>
+    <item
+        android:id="@+id/action_import"
+        android:title="@string/importar_libro"
+        android:src="@drawable/ic_a_adir"/>
+    <item
+        android:id="@+id/action_delete"
+        android:title="@string/eliminar_libro"
+        android:src="@drawable/ic_eliminar"/>
+</menu>

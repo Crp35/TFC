@@ -1,141 +1,347 @@
-package com.example.lectorlibros.ui.fragment
-
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
 import android.media.MediaPlayer
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.SeekBar
-import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import com.example.lectorlibros.R
-import com.example.lectorlibros.data.db.LibroEntity
+import com.example.lectorlibros.data.repository.LibroRepository
 import com.example.lectorlibros.databinding.FragmentAudioPlayerBinding
+import com.example.lectorlibros.entities.LibroEntity
+import com.example.lectorlibros.ui.activity.MainActivity
+import com.example.lectorlibros.ui.enums.EstadoLibro
+import com.example.lectorlibros.util.ToastHelper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-class AudioPlayerFragment : Fragment() {
+class AudioPlayerFragment(
+    private val repository: LibroRepository
+) : Fragment() {
 
     private var _binding: FragmentAudioPlayerBinding? = null
     private val binding get() = _binding!!
 
+    private var libroIdInterno: Long = -1L
     private var mediaPlayer: MediaPlayer? = null
     private var libro: LibroEntity? = null
+    private var updateJob: Job? = null
+    private var isPrepared = false
 
-    private var isPlaying = false
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            setupMediaPlayer()
+        } else {
+            ToastHelper.showToast(
+                context ?: return@registerForActivityResult,
+                "Permiso necesario para audio externo"
+            )
+        }
+    }
 
     companion object {
-        private const val ARG_LIBRO = "libro"
+        private const val ARG_LIBRO_ID = "libro_id"
 
-        fun newInstance(libro: LibroEntity): AudioPlayerFragment {
-            val fragment = AudioPlayerFragment()
-            val args = Bundle().apply {
-                putSerializable(ARG_LIBRO, libro)
-            }
-            fragment.arguments = args
+        fun newInstance(libroId: Long, repository: LibroRepository): AudioPlayerFragment {
+            val fragment = AudioPlayerFragment(repository)
+            fragment.arguments = Bundle().apply { putLong(ARG_LIBRO_ID, libroId) }
             return fragment
         }
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentAudioPlayerBinding.inflate(inflater, container, false)
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Obtener el libro del argumento
-        libro = arguments?.getSerializable(ARG_LIBRO) as? LibroEntity
+        libroIdInterno = arguments?.getLong(ARG_LIBRO_ID) ?: -1L
 
-        if (libro == null) {
-            Toast.makeText(requireContext(), "No se encontró el libro", Toast.LENGTH_SHORT).show()
-            return
-        }
+        lifecycleScope.launch {
+            libro = repository.getLibroById(libroIdInterno)
+            val currentLibro = libro ?: return@launch
 
-        // Mostrar información del libro
-        binding.tvTitle.text = libro?.titulo
-        // Cargar la portada del libro (si está disponible)
-        cargarPortada(libro)
+            // Imagen por defecto
+            binding.imgCover.setImageResource(R.drawable.book_open_book_read_icon)
 
-        // Configurar el MediaPlayer
-        mediaPlayer = MediaPlayer().apply {
-            setDataSource(libro?.uriAudio)
-            setOnPreparedListener {
-                binding.seekBar.max = duration
-                it.start()
-                this@AudioPlayerFragment.isPlaying = true
-                actualizarBotones()
-            }
-
-            setOnCompletionListener {
-                this@AudioPlayerFragment.isPlaying = false
-                actualizarBotones()
-            }
-
-            prepareAsync()
-        }
-
-        // Configuración del SeekBar
-        binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (fromUser) {
-                    mediaPlayer?.seekTo(progress)
+            // Cargar portada en segundo plano
+            val anchoPx = (300 * resources.displayMetrics.density).toInt()
+            val altoPx = (500 * resources.displayMetrics.density).toInt()
+            lifecycleScope.launch {
+                val bitmap = withContext(Dispatchers.IO) {
+                    obtenerPortadaAudio(currentLibro.uriAudio ?: "", anchoPx, altoPx)
                 }
-            }
-
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-        })
-
-        // Botón de reproducción / pausa
-        binding.btnPlayPause.setOnClickListener {
-            if (isPlaying) {
-                mediaPlayer?.pause()
-            } else {
-                mediaPlayer?.start()
-            }
-            isPlaying = !isPlaying
-            actualizarBotones()
-        }
-    }
-
-    private fun actualizarBotones() {
-        if (isPlaying) {
-            binding.btnPlayPause.setImageResource(R.drawable.ic_pause)
-        } else {
-            binding.btnPlayPause.setImageResource(R.drawable.ic_play)
-        }
-    }
-
-    private fun cargarPortada(libro: LibroEntity?) {
-        val rutaAudio = libro?.uriAudio
-        if (rutaAudio != null) {
-            try {
-                val retriever = MediaMetadataRetriever()
-                retriever.setDataSource(rutaAudio)
-                val art = retriever.embeddedPicture
-                if (art != null) {
-                    val bitmap = BitmapFactory.decodeByteArray(art, 0, art.size)
+                if (_binding != null && bitmap != null) {
                     binding.imgCover.setImageBitmap(bitmap)
-                } else {
-                    binding.imgCover.setImageResource(R.drawable.ic_icon2_background)
                 }
+            }
+
+            // Inicializar botón volver invisible
+            binding.btnVolver.visibility = View.GONE
+
+            // Listeners de botones
+            binding.btnPlayPause.setOnClickListener { togglePlayPause() }
+            binding.btnStop.setOnClickListener { stopAudio() }
+            binding.btnAtras.setOnClickListener { seekBackward() }
+            binding.btnAdelante.setOnClickListener { seekForward() }
+            binding.btnVolver.setOnClickListener {
+                mediaPlayer?.let { mp ->
+                    mp.seekTo(0)
+                    mp.start()
+                    isPrepared = true
+                    startUpdatingUI()
+                    binding.btnPlayPause.setImageResource(R.drawable.ic_pause)
+                }
+                it.visibility = View.GONE
+            }
+
+            // SeekBar
+            binding.seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                    if (fromUser && isPrepared) mediaPlayer?.seekTo(progress)
+                }
+                override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+                override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            })
+
+            // Comprobar permisos y preparar MediaPlayer
+            checkPermissionAndSetup()
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun checkPermissionAndSetup() {
+        val path = libro?.uriAudio ?: return
+        if (path.startsWith(requireContext().filesDir.absolutePath) ||
+            ContextCompat.checkSelfPermission(requireContext(), getRequiredPermission()) ==
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            setupMediaPlayer()
+        } else {
+            requestPermissionLauncher.launch(getRequiredPermission())
+        }
+    }
+
+    private fun getRequiredPermission(): String {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            Manifest.permission.READ_MEDIA_AUDIO
+        else
+            Manifest.permission.READ_EXTERNAL_STORAGE
+    }
+
+    private fun releaseMediaPlayer() {
+        isPrepared = false
+        stopUpdatingUI()
+        mediaPlayer?.apply {
+            try {
+                if (isPlaying) stop()
             } catch (e: Exception) {
                 e.printStackTrace()
-                binding.imgCover.setImageResource(R.drawable.ic_icon2_background)
             }
-        } else {
-            binding.imgCover.setImageResource(R.drawable.ic_icon2_background)
+            release()
+        }
+        mediaPlayer = null
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun setupMediaPlayer() {
+        val audioPath = libro?.uriAudio ?: return
+        if (mediaPlayer != null) releaseMediaPlayer()
+
+        mediaPlayer = MediaPlayer().apply {
+            try {
+                setDataSource(audioPath)
+
+                setOnPreparedListener { mp ->
+                    isPrepared = true
+                    libro?.totalPagina = mp.duration
+                    _binding?.let { binding ->
+                        binding.seekBar.max = mp.duration
+                        val pos = libro?.ultimaPosicion ?: 0
+                        mp.seekTo(pos)
+                        binding.tvTiempoActual.text = formatTime(pos)
+                        binding.tvTiempoTotal.text = formatTime(mp.duration)
+                    }
+
+                    // 👇 Solución: al abrir, si estaba COMPLETADO, pasar a EN_PROGRESO
+                    libro?.let { currentLibro ->
+                        if (currentLibro.estado == EstadoLibro.COMPLETADO) {
+                            currentLibro.estado = EstadoLibro.EN_PROGRESO
+                            lifecycleScope.launch {
+                                Log.d(
+                                    "AudioPlayer",
+                                    "Cambiando a EN_PROGRESO: ${currentLibro.titulo}, estado=${currentLibro.estado}"
+                                )
+                                repository.actualizaLibros(currentLibro)
+                            }
+                        }
+                    }
+
+                    mp.start()
+                    _binding?.btnPlayPause?.setImageResource(R.drawable.ic_pause)
+                    startUpdatingUI()
+                }
+
+                setOnCompletionListener {
+                    isPrepared = false
+                    _binding?.btnPlayPause?.setImageResource(R.drawable.ic_play)
+                    stopUpdatingUI()
+                    _binding?.btnVolver?.visibility = View.VISIBLE
+
+                    // 👇 Aquí sí marcar COMPLETADO al terminar
+                    libro?.let { currentLibro ->
+                        currentLibro.estado = EstadoLibro.COMPLETADO
+                        currentLibro.leido = true
+
+                        lifecycleScope.launch {
+                            Log.d(
+                                "AudioPlayer",
+                                "Marcando COMPLETADO: ${currentLibro.titulo}, estado=${currentLibro.estado}"
+                            )
+                            repository.actualizaLibros(currentLibro)
+                        }
+                    }
+                }
+
+                prepareAsync()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun togglePlayPause() {
+        val mp = mediaPlayer ?: return
+        if (!isPrepared) return
+        if (mp.isPlaying) {
+            mp.pause()
+            binding.btnPlayPause.setImageResource(R.drawable.ic_play)
+            stopUpdatingUI()
+        } else {
+            mp.start()
+            binding.btnPlayPause.setImageResource(R.drawable.ic_pause)
+            startUpdatingUI()
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun startUpdatingUI() {
+        updateJob?.cancel()
+        updateJob = viewLifecycleOwner.lifecycleScope.launch {
+            while (mediaPlayer?.isPlaying == true) {
+                mediaPlayer?.let { mp ->
+                    _binding?.let { b ->
+                        val currentPos = mp.currentPosition
+                        b.seekBar.progress = currentPos
+                        b.tvTiempoActual.text = formatTime(currentPos)
+                        libro?.ultimaPosicion = currentPos
+                        libro?.posicionMs = currentPos.toLong()
+                    }
+                }
+                libro?.let { currentLibro ->
+                    lifecycleScope.launch {
+                        try {
+                            repository.actualizaLibros(currentLibro)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+                delay(1000)
+            }
+        }
+    }
+
+    private fun stopUpdatingUI() {
+        updateJob?.cancel()
+    }
+
+    private fun stopAudio() {
+        if (!isPrepared) return
+        mediaPlayer?.pause()
+        mediaPlayer?.seekTo(0)
+        binding.btnPlayPause.setImageResource(R.drawable.ic_play)
+        stopUpdatingUI()
+    }
+
+    private fun seekBackward() {
+        if (!isPrepared) return
+        val newPos = (mediaPlayer?.currentPosition ?: 0) - 10000
+        mediaPlayer?.seekTo(newPos.coerceAtLeast(0))
+    }
+
+    private fun seekForward() {
+        if (!isPrepared) return
+        val newPos = (mediaPlayer?.currentPosition ?: 0) + 10000
+        mediaPlayer?.seekTo(newPos.coerceAtMost(mediaPlayer?.duration ?: 0))
+    }
+
+    private fun formatTime(ms: Int): String {
+        val minutos = (ms / 1000) / 60
+        val segundos = (ms / 1000) % 60
+        return String.format("%02d:%02d", minutos, segundos)
+    }
+
+    fun obtenerPortadaAudio(rutaAudio: String, ancho: Int, alto: Int): Bitmap? {
+        return try {
+            val mmr = MediaMetadataRetriever()
+            mmr.setDataSource(rutaAudio)
+            val data = mmr.embeddedPicture
+            if (data != null) {
+                val original = BitmapFactory.decodeByteArray(data, 0, data.size)
+                Bitmap.createScaledBitmap(original, ancho, alto, true)
+            } else null
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onDestroyView() {
-        super.onDestroyView()
-        mediaPlayer?.release()
+        val activity = activity as? MainActivity
+        activity?.binding?.ivMenu?.visibility = View.VISIBLE
+        activity?.binding?.layoutColecciones?.visibility = View.VISIBLE
+        activity?.binding?.tvTitulo?.text = getString(R.string.app_name)
+
+        mediaPlayer?.let {
+            if (isPrepared) libro?.ultimaPosicion = it.currentPosition
+            lifecycleScope.launch {
+                libro?.let { currentLibro ->
+                    repository.actualizaLibros(currentLibro)
+                }
+            }
+            it.release()
+        }
+        mediaPlayer = null
+        isPrepared = false
+        stopUpdatingUI()
         _binding = null
+        super.onDestroyView()
     }
 }

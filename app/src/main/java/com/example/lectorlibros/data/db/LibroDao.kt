@@ -5,8 +5,8 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.example.lectorlibros.entities.LibroEntity
 import com.example.lectorlibros.ui.enums.EstadoLibro
-import com.example.lectorlibros.ui.enums.TipoCeleccion
 import com.example.lectorlibros.ui.enums.TipoDeLibro
 import kotlinx.coroutines.flow.Flow
 
@@ -24,9 +24,6 @@ interface LibroDao {
     @Query("SELECT * FROM libro ")
     fun getAllLibros(): Flow<List<LibroEntity>>
 
-    @Query("SELECT * FROM libro WHERE tipoLibro = :tipoDeLibro")
-    suspend fun getLibrosPorTipo(tipoDeLibro: TipoDeLibro): LibroEntity?
-
     @Query("SELECT * FROM libro WHERE titulo = :titulo")
     suspend fun getLibroByTitulo(titulo: String): LibroEntity?
 
@@ -35,13 +32,18 @@ interface LibroDao {
     suspend fun getLibroByAutor(autor: String): LibroEntity?
 
     /**
-     * OBTENEMOS OS LIBROS SEGÚN EL FORMATO DE ÉSTE: PDF, AUDIO, EPUB, ETC.,
+     * OBTENEMOS LOS LIBROS SEGÚN EL FORMATO: PDF, AUDIO, EPUB, ETC.
      */
     @Query("SELECT * FROM libro WHERE tipoLibro = 'PDF'")
     fun getLibrosPDF(): Flow<List<LibroEntity>>
 
-    @Query("SELECT * FROM libro WHERE tipoLibro = 'AUDIO'")
-    fun getLibrosAudio(): Flow<List<LibroEntity>>
+    // Obtenemos por parámetro el tipo (ej. TipoDeLibro.AUDIO)
+    @Query("SELECT * FROM libro WHERE tipoLibro = :tipo")
+    fun getLibrosAudio(tipo: TipoDeLibro): Flow<List<LibroEntity>>
+
+    // Nuevo: obtener libro por id
+    @Query("SELECT * FROM libro WHERE id = :id")
+    suspend fun getLibroById(id: Long): LibroEntity?
 
     /**
      * CONTADORES DE LIBROS: TODOS, DESCARGADOS, TERMINADOS, PDF, AUDIO
@@ -54,6 +56,10 @@ interface LibroDao {
 
     @Query("SELECT COUNT(*) FROM libro WHERE estado = 'EN_PROGRESO'")
     suspend fun countLibrosEnProgreso(): Int
+
+    @Query("SELECT * FROM libro WHERE estado = :estado ")
+    suspend fun getLibrosPorEstado(estado: EstadoLibro): List<LibroEntity>
+
 
     @Query("SELECT COUNT(*) FROM libro WHERE tipoLibro = 'AUDIO'")
     suspend fun countLibrosTotalLibrosAudio(): Int
@@ -76,13 +82,13 @@ interface LibroDao {
         WHERE 
                 id = :id
     """)
-    suspend fun updateLibro( id: Long, titulo: String, autor: String)
+    suspend fun actualizarLibro(id: Long, titulo: String, autor: String)
 
     /**
      * Elimina un libro por su id
      * */
     @Query("DELETE FROM libro WHERE id = :id")
-    suspend fun deleteLibroById(id: Long)
+    suspend fun eliminarLibros(id: Long)
 
     /**
      * Método que actualiza la posición del audio
@@ -90,10 +96,18 @@ interface LibroDao {
     @Query("UPDATE libro SET posicionMs = :posicionMs WHERE id = :id")
     suspend fun actualizarPosicionAudio(id: Long, posicionMs: Long)
 
+    @Query("SELECT * FROM libro WHERE titulo = :titulo LIMIT 1")
+    suspend fun getLibro(titulo: String): LibroEntity?
+
+    //@Query("SELECT * FROM libro WHERE titulo LIKE '%' || :texto || '%'")
+    @Query("SELECT * FROM libro WHERE titulo LIKE :texto COLLATE NOCASE")
+    fun buscarLibrosPorTitulo(texto: String): Flow<List<LibroEntity>>
+
+
+
+
     @Update
-    suspend fun updateLibro(libro: LibroEntity)
-
-
+    suspend fun actualizarLibro(libro: LibroEntity)
 
 
 }

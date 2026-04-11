@@ -6,8 +6,8 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import com.example.lectorlibros.R
 import com.example.lectorlibros.data.db.LibroDao
-import com.example.lectorlibros.data.db.LibroEntity
-import com.example.lectorlibros.ui.enums.TipoCeleccion
+import com.example.lectorlibros.entities.LibroEntity
+import com.example.lectorlibros.ui.enums.TipoColeccion
 import com.example.lectorlibros.ui.enums.TipoDeLibro
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -22,8 +22,8 @@ class LibroRepository(
     private val servicioDescargaPdf: ServicioDescargaPdf
 ) {
 
-    suspend fun  updateLibro(libro: LibroEntity) {
-        libroDao.updateLibro(libro)
+    suspend fun  actualizaLibros(libro: LibroEntity) {
+        libroDao.actualizarLibro(libro)
     }
 
 
@@ -32,9 +32,23 @@ class LibroRepository(
         File(contexto.filesDir, "audio").apply { if (!exists()) mkdirs() }
     }
 
-    // -----------------------
+    fun buscarLibrosPorTitulo(titulo: String): Flow<List<LibroEntity>> {
+        return libroDao.buscarLibrosPorTitulo(titulo)
+    }
+
+    // Método que nos permite renombrar los libros
+    suspend fun renombrarLibros(id: Long, nuevoTitulo: String, nuevoAutor: String){
+        libroDao.actualizarLibro(id, nuevoTitulo, nuevoAutor)
+    }
+
+    // Método que nos permite elminr libros
+    suspend fun deleteLibro(libro: LibroEntity) {
+        libroDao.eliminarLibros(libro.id)
+    }
+
+
+
     // Descarga de PDFs
-    // -----------------------
     suspend fun descargarLibro(
         libro: LibroEntity,
         urlPDF: String
@@ -49,9 +63,8 @@ class LibroRepository(
         }
     }
 
-    // -----------------------
+
     // Guardar audio en sandbox + BD
-    // -----------------------
     suspend fun guardarAudio(
         titulo: String,
         autor: String,
@@ -87,24 +100,27 @@ class LibroRepository(
 
     fun getAllLibros(): Flow<List<LibroEntity>> = libroDao.getAllLibros()
     fun getLibrosPDF(): Flow<List<LibroEntity>> = libroDao.getLibrosPDF()
-    fun getLibrosAudio(): Flow<List<LibroEntity>> = libroDao.getLibrosAudio()
+    fun getLibrosAudio(): Flow<List<LibroEntity>> = libroDao.getLibrosAudio(TipoDeLibro.AUDIO)
 
     suspend fun cambiarTituloAutor(libro: LibroEntity) {
-        libroDao.updateLibro(libro.id, libro.titulo, libro.autor)
+        libroDao.actualizarLibro(libro.id, libro.titulo, libro.autor)
     }
 
     suspend fun getLibroByTitulo(titulo: String) = libroDao.getLibroByTitulo(titulo)
     suspend fun getLibroByAutor(autor: String) = libroDao.getLibroByAutor(autor)
 
-    suspend fun contarLibros(tipo: TipoCeleccion): Int {
+    suspend fun contarLibros(tipo: TipoColeccion): Int {
         return when (tipo) {
-            TipoCeleccion.TODOS -> libroDao.countTotalLibros()
-            TipoCeleccion.DESCARGADOS -> libroDao.countTotalLibrosDescargados()
-            TipoCeleccion.TERMINADOS -> libroDao.countLibrosLeidos()
-            TipoCeleccion.PDF -> libroDao.countLibrosTotalLibrosPDF()
-            TipoCeleccion.AUDIO -> libroDao.countLibrosTotalLibrosAudio()
+            TipoColeccion.TODOS -> libroDao.countTotalLibros()
+            TipoColeccion.DESCARGADOS -> libroDao.countTotalLibrosDescargados()
+            TipoColeccion.TERMINADOS -> libroDao.countLibrosLeidos()
+            TipoColeccion.PDF -> libroDao.countLibrosTotalLibrosPDF()
+            TipoColeccion.AUDIO -> libroDao.countLibrosTotalLibrosAudio()
         }
     }
+
+    // Nuevo: obtener libro por id
+    suspend fun getLibroById(id: Long): LibroEntity? = libroDao.getLibroById(id)
 
     // -----------------------
     // POBLAR BD CON TODOS LOS AUDIOS DE RAW
@@ -146,7 +162,7 @@ class LibroRepository(
     // -----------------------
     // Función de prueba para insertar libros
     // -----------------------
-    suspend fun pruebaInsertarLibros() {
+    /*suspend fun pruebaInsertarLibros() {
         if (libroDao.countLibrosTotalLibrosAudio() == 0) {
             poblarBDDesdeRaw()
 
@@ -159,6 +175,6 @@ class LibroRepository(
                 )
             )
         }
-    }
+    }*/
 
 }
