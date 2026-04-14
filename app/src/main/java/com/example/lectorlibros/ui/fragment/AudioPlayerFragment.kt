@@ -41,6 +41,7 @@ class AudioPlayerFragment(
     private var libro: LibroEntity? = null
     private var updateJob: Job? = null
     private var isPrepared = false
+    private var controlesVisibles = true
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private val requestPermissionLauncher = registerForActivityResult(
@@ -80,6 +81,13 @@ class AudioPlayerFragment(
         super.onViewCreated(view, savedInstanceState)
 
         libroIdInterno = arguments?.getLong(ARG_LIBRO_ID) ?: -1L
+
+        binding.imgCover.setOnClickListener {
+            if(!controlesVisibles){
+                alternarControles() // Si los controles están ocultos, los muestra
+            }
+            reinciarTemporizadorOcultar() // Pase lo que pase, reinicia el temporizador
+        }
 
         lifecycleScope.launch {
             libro = repository.getLibroById(libroIdInterno)
@@ -131,6 +139,53 @@ class AudioPlayerFragment(
             // Comprobar permisos y preparar MediaPlayer
             checkPermissionAndSetup()
         }
+    }
+
+    /**
+     * Variable para temporizador de ocultar controles
+     * */
+    private val ocultarHandler = android.os.Handler(android.os.Looper.getMainLooper())
+
+    /**
+     * Runnable para ocultar controles tras 1 segundos*/
+    private val ocultarRunnable = Runnable {
+        if(controlesVisibles) alternarControles()
+    }
+
+    /**
+     * Método para reiniciar el temporizador de ocultar controles
+     * */
+    private fun reinciarTemporizadorOcultar(){
+        ocultarHandler.removeCallbacks(ocultarRunnable)
+        ocultarHandler.postDelayed(ocultarRunnable, 1000)
+    }
+
+    /**
+     * Método para alternar la visibilidad de los controles
+     * */
+    private fun alternarControles(){
+        val bloqueControles = binding.playerControlsBlock
+
+        if(controlesVisibles){
+            // Ocultamos los controles al deslizar hacia abajo
+            bloqueControles.animate()
+                .translationY(bloqueControles.height.toFloat())
+                .alpha(0f)
+                .setDuration(300)
+                .withEndAction { bloqueControles.visibility = View.GONE }
+        }else{
+            // Mostramos los controles al deslizar hacia arriba
+            bloqueControles.visibility = View.VISIBLE
+            bloqueControles.animate()
+                .translationY(0f)
+                .alpha(1f)
+                .setDuration(300)
+                .start()
+
+            // Si acabamos de mostrar los controles, hacemos que se oculten tras 3 segundos
+            reinciarTemporizadorOcultar()
+        }
+        controlesVisibles = !controlesVisibles
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -210,9 +265,9 @@ class AudioPlayerFragment(
                     isPrepared = false
                     _binding?.btnPlayPause?.setImageResource(R.drawable.ic_play)
                     stopUpdatingUI()
-                    _binding?.btnVolver?.visibility = View.VISIBLE
+                    _binding?.btnAtras?.visibility = View.VISIBLE
 
-                    // 👇 Aquí sí marcar COMPLETADO al terminar
+                    // Aquí sí marcar COMPLETADO al terminar
                     libro?.let { currentLibro ->
                         currentLibro.estado = EstadoLibro.COMPLETADO
                         currentLibro.leido = true
