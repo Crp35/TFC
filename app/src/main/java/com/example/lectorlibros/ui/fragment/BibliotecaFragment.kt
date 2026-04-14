@@ -21,8 +21,8 @@ import com.example.lectorlibros.databinding.FragmentBibliotecaBinding
 import com.example.lectorlibros.entities.LibroEntity
 import com.example.lectorlibros.ui.activity.MainActivity
 import com.example.lectorlibros.ui.adapter.LibrosAdapter
+import com.example.lectorlibros.ui.enums.EstadoLibro
 import com.example.lectorlibros.ui.enums.TipoDeLibro
-import com.google.android.material.appbar.CollapsingToolbarLayout
 import kotlinx.coroutines.launch
 
 class BibliotecaFragment : Fragment() {
@@ -33,6 +33,8 @@ class BibliotecaFragment : Fragment() {
     lateinit var repository: LibroRepository
     private val listaLibros = mutableListOf<LibroEntity>()
     private lateinit var adapter: LibrosAdapter
+
+    private var coleccionActual: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -153,7 +155,64 @@ class BibliotecaFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun cargarLibros() {
         viewLifecycleOwner.lifecycleScope.launch {
+            // Obtenemos los strings de recursos para comparar
+            val pdf = getString(R.string.opcion_pdf)
+            val audio = getString(R.string.opcion_audiolibros)
+            //val todos = getString(R.string.estanteria)
+            val terminados = getString(R.string.opcion_terminados)
+            val descargados = getString(R.string.descargados)
+
             repository.getAllLibros().collect { listaCompleta ->
+
+                // 1. Aplicamos el filtro y lo guardamos en 'listaFinal'
+                val listaFinal = when (coleccionActual) {
+                    pdf -> listaCompleta.filter { it.tipoLibro == TipoDeLibro.PDF }
+                    audio -> listaCompleta.filter { it.tipoLibro == TipoDeLibro.AUDIO }
+                    descargados -> listaCompleta.filter { it.descargado }
+                    terminados -> listaCompleta.filter { it.estado == EstadoLibro.COMPLETADO }
+                    //todos -> listaCompleta
+                    else -> listaCompleta.filter { it.tipoLibro == TipoDeLibro.PDF || it.tipoLibro == TipoDeLibro.AUDIO }
+                }
+
+                // 2. Limpiamos y actualizamos la lista global del fragmento
+                listaLibros.clear()
+                listaLibros.addAll(listaFinal)
+
+                // 3. Gestionamos la visibilidad de la interfaz
+                binding.tvEmpty.visibility = if (listaLibros.isEmpty()) View.VISIBLE else View.GONE
+                binding.rvBiblioteca.visibility = if (listaLibros.isEmpty()) View.GONE else View.VISIBLE
+
+                // 4. Notificamos al adaptador con la lista ya filtrada
+                adapter.actualizarLibros(listaLibros)
+
+                Log.d("BIBLIOTECA", "Mostrando colección: $coleccionActual - Cantidad: ${listaLibros.size}")
+            }
+        }
+    }
+
+    /* DESCOMENTA SI ERROR @RequiresApi(Build.VERSION_CODES.Q)
+    private fun cargarLibros() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val pdf = getString(R.string.opcion_pdf)
+            val audio = getString(R.string.opcion_audiolibros)
+            val todos = getString(R.string.todos)
+            val terminados = getString(R.string.opcion_terminados)
+            val descargados = getString(R.string.opcion_Descargados)
+
+            repository.getAllLibros().collect { listaCompleta ->
+                // Aplicamos el filtro según la colección seleccionada
+                val tiposFiltrados = when (coleccionActual) {
+
+                    pdf -> listaCompleta.filter { it.tipoLibro == TipoDeLibro.PDF }
+                    audio -> listaCompleta.filter { it.tipoLibro == TipoDeLibro.AUDIO }
+                    descargados -> listaCompleta.filter { it.descargado }
+                    todos -> listaCompleta
+                    terminados -> listaCompleta.filter { it.estado == EstadoLibro.COMPLETADO }
+                    else -> listaCompleta // Todos los libros
+                }
+                listaLibros.clear()
+                listaLibros.addAll(tiposFiltrados)
+
                 Log.d("BIBLIOTECA", "Datos recibidos: ${listaCompleta.size} libros")
 
                 val filtrados = listaCompleta.filter { it.tipoLibro == TipoDeLibro.PDF || it.tipoLibro == TipoDeLibro.AUDIO }
@@ -167,6 +226,11 @@ class BibliotecaFragment : Fragment() {
                 adapter.actualizarLibros(filtrados)
             }
         }
+    }*/
+
+    fun filtrarPorColeccion(tipo: String) {
+        coleccionActual = tipo
+        cargarLibros() // Recarga la lista con el nuevo filtro
     }
 
     private fun abrirLibro(libro: LibroEntity) {

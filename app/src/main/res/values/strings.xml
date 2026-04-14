@@ -9,7 +9,7 @@
     <string name="buscar">Buscar</string>
     <string name="menu">Menú</string>
     <string name="pdf">PDF</string>
-    <string name="todos">Biblioteca</string>
+    <string name="estanteria">Biblioteca</string>
     <string name="terminados">Terminados</string>
     <string name="en_progreso">En progreso</string>
     <string name="descargados">Descargados</string>
@@ -23,7 +23,7 @@
     <string name="mensaje_audiolibros">No hay audiolibros que mostrar</string>
     <string name="mensaje_error">Error al cargar libros</string>
     <string name="opcion_seleccion">Selecciona una opción</string>
-    <string name="opcion_terminados">Terminados</string>
+    <string name="opcion_terminados">Leídos</string>
     <string name="opcion_libros">Libros</string>
     <string name="busquedaLocal">Buscar en local</string>
     <string name="busquedaInternet">Buscar en internet</string>

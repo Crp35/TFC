@@ -133,34 +133,23 @@ class MainActivity : AppCompatActivity() {
 
         adapter.onItemClick = { position, titulo ->
             alertDialog.dismiss()
-            val tipo = when (position) {
-                0 -> TipoColeccion.TODOS
-                1 -> TipoColeccion.TERMINADOS
-                2 -> TipoColeccion.PDF
-                3 -> TipoColeccion.AUDIO
-                4 -> TipoColeccion.DESCARGADOS
-                else -> TipoColeccion.TODOS
-            }
 
-            when (tipo) {
-                TipoColeccion.PDF -> {
-                    val libroSeleccionado = "UTF4.pdf" // Libro de prueba, reemplaza con libro real
-                    cargarFragment(PdfFragment.newInstance(libroSeleccionado))
-                    binding.tvTitulo.text = libroSeleccionado
-                    binding.layoutColecciones.visibility = View.GONE
-                    binding.ivMenu.visibility = View.GONE
-                }
-                TipoColeccion.AUDIO -> {
-                    cargarFragment(AudioLibrosFragment(repository))
+            // 1. Buscamos si el fragmento actual es la Biblioteca
+            val fragmentoActual = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
+
+            if (fragmentoActual is BibliotecaFragment) {
+                // 2. Si estamos en Biblioteca, simplemente le decimos que filtre
+                fragmentoActual.filtrarPorColeccion(titulo)
+                binding.tvTitulo.text = titulo
+            } else {
+                // 3. Si no estamos en Biblioteca (ej. estamos en Buscar),
+                // cargamos la Biblioteca y le pasamos el filtro (opcional)
+                val fragmentoBiblioteca = BibliotecaFragment.newInstance(repository)
+                cargarFragment(fragmentoBiblioteca)
+                // Damos un pequeño tiempo para que se cree y luego filtramos
+                binding.root.post {
+                    fragmentoBiblioteca.filtrarPorColeccion(titulo)
                     binding.tvTitulo.text = titulo
-                    binding.layoutColecciones.visibility = View.GONE
-                    binding.ivMenu.visibility = View.GONE
-                }
-                else -> {
-                    cargarFragment(ColeccionesFragment.newInstance(tipo))
-                    binding.tvTitulo.text = titulo
-                    binding.layoutColecciones.visibility = View.VISIBLE
-                    binding.ivMenu.visibility = View.VISIBLE
                 }
             }
         }
