@@ -18,8 +18,9 @@
             android:id="@+id/imgCover"
             android:layout_width="80dp"
             android:layout_height="80dp"
+            android:contentDescription="@string/descripcion_portada"
             android:scaleType="centerCrop"
-            android:src="@drawable/ic_icon2_background"/>
+            android:src="@drawable/ic_libro_abierto"/>
 
         <TextView
             android:id="@+id/tvTitle"
@@ -29,7 +30,7 @@
             android:textColor="@android:color/white"
             android:textSize="16sp"
             android:layout_marginStart="16dp"
-            android:text="Título del audio"/>
+            android:text="@string/faltaTitulo"/>
     </LinearLayout>
 
 </androidx.cardview.widget.CardView>

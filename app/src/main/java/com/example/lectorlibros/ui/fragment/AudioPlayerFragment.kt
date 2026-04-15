@@ -28,6 +28,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.core.graphics.scale
 
 class AudioPlayerFragment(
     private val repository: LibroRepository
@@ -147,7 +148,7 @@ class AudioPlayerFragment(
     private val ocultarHandler = android.os.Handler(android.os.Looper.getMainLooper())
 
     /**
-     * Runnable para ocultar controles tras 1 segundos*/
+     * Runnable para ocultar controles tras 2 segundos*/
     private val ocultarRunnable = Runnable {
         if(controlesVisibles) alternarControles()
     }
@@ -157,7 +158,7 @@ class AudioPlayerFragment(
      * */
     private fun reinciarTemporizadorOcultar(){
         ocultarHandler.removeCallbacks(ocultarRunnable)
-        ocultarHandler.postDelayed(ocultarRunnable, 1000)
+        ocultarHandler.postDelayed(ocultarRunnable, 2000)
     }
 
     /**
@@ -242,7 +243,7 @@ class AudioPlayerFragment(
                         binding.tvTiempoTotal.text = formatTime(mp.duration)
                     }
 
-                    // 👇 Solución: al abrir, si estaba COMPLETADO, pasar a EN_PROGRESO
+                    // Al abrir, si el libro estaba en COMPLETADO, pasa a EN_PROGRESO
                     libro?.let { currentLibro ->
                         if (currentLibro.estado == EstadoLibro.COMPLETADO) {
                             currentLibro.estado = EstadoLibro.EN_PROGRESO
@@ -267,15 +268,15 @@ class AudioPlayerFragment(
                     stopUpdatingUI()
                     _binding?.btnAtras?.visibility = View.VISIBLE
 
-                    // Aquí sí marcar COMPLETADO al terminar
+                    // Marcamos COMPLETADO al terminar
                     libro?.let { currentLibro ->
                         currentLibro.estado = EstadoLibro.COMPLETADO
                         currentLibro.leido = true
-
                         lifecycleScope.launch {
                             Log.d(
                                 "AudioPlayer",
-                                "Marcando COMPLETADO: ${currentLibro.titulo}, estado=${currentLibro.estado}"
+                                "Marcando COMPLETADO: ${currentLibro.titulo}," +
+                                        " estado=${currentLibro.estado}"
                             )
                             repository.actualizaLibros(currentLibro)
                         }
@@ -369,7 +370,7 @@ class AudioPlayerFragment(
             val data = mmr.embeddedPicture
             if (data != null) {
                 val original = BitmapFactory.decodeByteArray(data, 0, data.size)
-                Bitmap.createScaledBitmap(original, ancho, alto, true)
+                original.scale(ancho, alto)
             } else null
         } catch (e: Exception) {
             e.printStackTrace()

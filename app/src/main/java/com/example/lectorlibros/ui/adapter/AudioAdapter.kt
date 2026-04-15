@@ -14,7 +14,8 @@ import com.example.lectorlibros.databinding.ItemAudioBinding
 
 
 class AudioAdapter(
-    private val onItemClick: ((LibroEntity) -> Unit)? = null
+    private val onItemClick: (LibroEntity) -> Unit,
+    private val onItemLongClick: (LibroEntity) -> Unit
 ) : ListAdapter<LibroEntity, AudioAdapter.AudioViewHolder>(DiffCallback()) {
 
     inner class AudioViewHolder(val binding: ItemAudioBinding) : RecyclerView.ViewHolder(
@@ -33,20 +34,20 @@ class AudioAdapter(
                         val bitmap = BitmapFactory.decodeByteArray(art, 0, art.size)
                         binding.imgCover.setImageBitmap(bitmap)
                     } else {
-                        binding.imgCover.setImageResource(R.drawable.ic_icon2_background)
+                        binding.imgCover.setImageResource(R.drawable.ic_nota_musical)
                     }
                     retriever.release()
                 } catch (ex: Exception) {
                     Log.e("AudioAdapter", "Error obteniendo artwork del audio: ${ex.message}", ex)
-                    binding.imgCover.setImageResource(R.drawable.ic_icon2_background)
+                    binding.imgCover.setImageResource(R.drawable.ic_nota_musical)
                 }
             } else {
-                binding.imgCover.setImageResource(R.drawable.ic_icon2_background)
+                binding.imgCover.setImageResource(R.drawable.ic_nota_musical)
             }
 
             binding.root.setOnClickListener {
                 Log.d("AudioAdapter", "Item clicked: id=${libro.id} title=${libro.titulo}")
-                onItemClick?.invoke(libro)
+                onItemClick.invoke(libro)
             }
         }
     }
@@ -62,8 +63,21 @@ class AudioAdapter(
 
     override fun onBindViewHolder(holder: AudioViewHolder, position: Int) {
         val libro = getItem(position)
-        holder.binding.root.setOnClickListener { onItemClick?.invoke(libro) }
+        holder.binding.root.setOnClickListener { onItemClick (libro) }
         //holder.bind(getItem(position))
+
+        // Click normal
+        holder.itemView.setOnClickListener {
+            onItemClick (libro)
+            }
+
+        // Click largo
+        holder.itemView.setOnClickListener {
+            onItemLongClick(libro)
+            }
+        }
+
+
     }
 
     class DiffCallback : DiffUtil.ItemCallback<LibroEntity>() {
@@ -75,4 +89,4 @@ class AudioAdapter(
             return oldItem == newItem
         }
     }
-}
+

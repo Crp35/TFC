@@ -45,7 +45,8 @@ class BibliotecaFragment : Fragment() {
         return binding.root
     }
 
-    // Función corregida para mostrar el menú CRUD
+    // Función para mostrar el menú CRUD
+    @RequiresApi(Build.VERSION_CODES.Q)
     fun showPopupMenu(libro: LibroEntity, ancla: View) {
         val popup = PopupMenu(requireContext(), ancla)
         // CAMBIO: Se eliminó el segundo argumento 'popup.menu' para evitar el error de compilación
@@ -55,7 +56,6 @@ class BibliotecaFragment : Fragment() {
             when (menuItem.itemId) {
 
                 R.id.action_rename -> {
-                    //Toast.makeText(requireContext(), "Renombrar: ${libro.titulo}", Toast.LENGTH_SHORT).show()
                     mostrarDialogoRenombrar(libro)
                     true
                 }
@@ -71,8 +71,9 @@ class BibliotecaFragment : Fragment() {
         popup.show()
     }
 
-    // Inicion método para mostrar diálogo renombrar libros
+    // Inicio método para mostrar diálogo renombrar libros
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun mostrarDialogoRenombrar(libro: LibroEntity) {
         val abortar = getString(R.string.cancelar)
         val salvarEdicion = getString(R.string.gurdar_libro)
@@ -100,7 +101,7 @@ class BibliotecaFragment : Fragment() {
                 // Ejecutamos la actualización en una corrutina
                 viewLifecycleOwner.lifecycleScope.launch {
                     repository.renombrarLibros(libro.id, nuevoTitulo, libro.autor)
-                    Toast.makeText(requireContext(), "Título cambiado", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), getString(R.string.titulo_cambiado), Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -113,6 +114,7 @@ class BibliotecaFragment : Fragment() {
     // Fin método para mostrar diálogo renombrar libros
 
     // MEJORA: Lógica para eliminar el libro de la base de datos
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun confirmarEliminacion(libro: LibroEntity) {
         AlertDialog.Builder(requireContext())
             .setTitle("Eliminar libro")
@@ -158,7 +160,6 @@ class BibliotecaFragment : Fragment() {
             // Obtenemos los strings de recursos para comparar
             val pdf = getString(R.string.opcion_pdf)
             val audio = getString(R.string.opcion_audiolibros)
-            //val todos = getString(R.string.estanteria)
             val terminados = getString(R.string.opcion_terminados)
             val descargados = getString(R.string.descargados)
 
@@ -170,7 +171,6 @@ class BibliotecaFragment : Fragment() {
                     audio -> listaCompleta.filter { it.tipoLibro == TipoDeLibro.AUDIO }
                     descargados -> listaCompleta.filter { it.descargado }
                     terminados -> listaCompleta.filter { it.estado == EstadoLibro.COMPLETADO }
-                    //todos -> listaCompleta
                     else -> listaCompleta.filter { it.tipoLibro == TipoDeLibro.PDF || it.tipoLibro == TipoDeLibro.AUDIO }
                 }
 
@@ -228,6 +228,7 @@ class BibliotecaFragment : Fragment() {
         }
     }*/
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     fun filtrarPorColeccion(tipo: String) {
         coleccionActual = tipo
         cargarLibros() // Recarga la lista con el nuevo filtro
@@ -237,9 +238,11 @@ class BibliotecaFragment : Fragment() {
         val activity = activity as? MainActivity
         when (libro.tipoLibro) {
             TipoDeLibro.PDF -> activity?.cargarFragment(PdfFragment.newInstance(libro.titulo))
-            TipoDeLibro.AUDIO -> activity?.cargarFragment(AudioPlayerFragment.newInstance(libro.id, repository))
+            TipoDeLibro.AUDIO -> activity?.cargarFragment(AudioPlayerFragment.newInstance(libro.id,
+                repository))
             TipoDeLibro.EPUB -> {
-                Toast.makeText(requireContext(), "Abrir EPUB: ${libro.titulo}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Abrir EPUB: ${libro.titulo}",
+                    Toast.LENGTH_SHORT).show()
             }
         }
         activity?.binding?.tvTitulo?.text = libro.titulo

@@ -91,16 +91,19 @@ class LibroRepository(
         libro
     }
 
-    // -----------------------
+
     // Funciones de inserción y consulta
-    // -----------------------
     suspend fun insertLibro(libro: LibroEntity) {
         libroDao.insertLibro(libro)
     }
 
     fun getAllLibros(): Flow<List<LibroEntity>> = libroDao.getAllLibros()
     fun getLibrosPDF(): Flow<List<LibroEntity>> = libroDao.getLibrosPDF()
-    fun getLibrosAudio(): Flow<List<LibroEntity>> = libroDao.getLibrosAudio(TipoDeLibro.AUDIO)
+
+    fun getLibrosAudio(): Flow<List<LibroEntity>>{
+        return libroDao.getLibrosAudio(TipoDeLibro.AUDIO)
+    }
+    //fun getLibrosAudio(): Flow<List<LibroEntity>> = libroDao.getLibrosAudio(TipoDeLibro.AUDIO)
 
     suspend fun cambiarTituloAutor(libro: LibroEntity) {
         libroDao.actualizarLibro(libro.id, libro.titulo, libro.autor)

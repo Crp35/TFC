@@ -51,8 +51,39 @@ class PdfFragment : Fragment() {
         return binding.root
     }
 
+    private fun alternarMenu() {
+
+        menusVisibles = !menusVisibles
+       actualizarEstadoInterfaz(menusVisibles)
+
+        // Aquí también ocultamos el marcador de páginas propio del PDF
+        binding.tvPageIndicator.visibility = if (menusVisibles) View.VISIBLE else View.GONE
+
+    }
+
+    private fun actualizarEstadoInterfaz(visible: Boolean){
+        // Controlar las barras de MainActvity
+        (activity as? MainActivity)?.setMenuVisibility(visible)
+
+        // Controlamos los elementos internos del Fragment(Marcador)
+        val visibilidadInterna = if(visible) View.VISIBLE else View.GONE
+        binding.tvPageIndicator.visibility = visibilidadInterna
+
+        // DESCOMENTAR SI ERROR( OCULATAMOS LA PORTADA)
+        binding.ivPortada.visibility = visibilidadInterna
+    }
+
+    private var menusVisibles = false //Empezamos con la pantalla completa
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        // Al entrar, ocultamos todo por defecto, para así estar en pantalla completa
+        (activity as? MainActivity)?.setMenuVisibility(false)
+
+        // Configuramos el toque en el contenedor del PDF
+        binding.rooPdf.setOnClickListener {
+            alternarMenu()
+        }
 
         binding.tvEmpty.text = uriPdf ?: getString(R.string.mensaje_no_libros)
 
@@ -81,12 +112,12 @@ class PdfFragment : Fragment() {
 
             libroEntity?.let { libro ->
 
-                // 🔹 Título en la UI
+                // Título en la UI
                 (activity as? MainActivity)?.binding?.tvTitulo?.text = libro.titulo
 
                 val pdfFile = File(libro.uriPDF)
 
-                // 🔹 PORTADA (background)
+                // PORTADA (background)
                 lifecycleScope.launch(Dispatchers.IO) {
                     val anchoPx = (300 * resources.displayMetrics.density).toInt()
                     val altoPx = (600 * resources.displayMetrics.density).toInt()
@@ -104,12 +135,12 @@ class PdfFragment : Fragment() {
                         if (portadaBitmap != null) {
                             binding.ivPortada.setImageBitmap(portadaBitmap)
                         } else {
-                            binding.ivPortada.setImageResource(R.drawable.book_open_book_read_icon)
+                            binding.ivPortada.setImageResource(R.drawable.ic_libro_abierto)
                         }
                     }
                 }
 
-                // 🔹 ABRIR PDF REAL
+                // ABRIR PDF REAL
                 if (pdfFile.exists()) {
 
                     binding.pdfView.fromFile(pdfFile)
@@ -117,7 +148,12 @@ class PdfFragment : Fragment() {
                         .enableSwipe(true)
                         .swipeHorizontal(false)
                         .enableDoubletap(true)
+                        .defaultPage(0)
                         .enableAnnotationRendering(true)
+                        .onTap {
+                            alternarMenu()
+                            true
+                        }
 
                         // TOTAL DE PÁGINAS
                         .onLoad { pageCount ->
@@ -194,6 +230,8 @@ class PdfFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // AL salir del fragment, nos aseguramos de devolver los menús
+        (activity as? MainActivity)?.setMenuVisibility(true)
         _binding = null
     }
 }

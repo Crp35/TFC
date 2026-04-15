@@ -41,7 +41,8 @@ class LeidosFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val view = inflater.inflate(R.layout.fragment_leidos, container, false)
+        val view = inflater.inflate(R.layout.fragment_leidos, container,
+            false)
         recycler = view.findViewById(R.id.recyclerLeidos)
         return view
     }
@@ -89,6 +90,7 @@ class LeidosFragment : Fragment() {
     }
 
     // Función necesaria para mostrar el menú CRUD
+    @RequiresApi(Build.VERSION_CODES.Q)
     fun showPopupMenu(libro: LibroEntity, ancla: View) {
         val popup = PopupMenu(requireContext(), ancla)
         popup.inflate(R.menu.menu_item_libro)
@@ -110,25 +112,32 @@ class LeidosFragment : Fragment() {
     }
 
     // Función necesaria para confirmar eliminación
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun confirmarEliminacion(libro: LibroEntity) {
+        val abortar = getString(R.string.cancelar)
+        val afirmacion = getString(R.string.confirmar_eliminado)
+        val confirmacion = getString(R.string.confirmar_eliminar)
+        val eliminar = getString(R.string.eliminar)
+        val eliminar_libro = getString(R.string.eliminar_lib)
         AlertDialog.Builder(requireContext())
-            .setTitle("Eliminar libro")
-            .setMessage("¿Estás seguro de eliminar '${libro.titulo}'?")
-            .setPositiveButton("Eliminar") { _, _ ->
+            .setTitle(eliminar_libro)
+            .setMessage("$confirmacion'${libro.titulo}'?")
+            .setPositiveButton(eliminar) { _, _ ->
                 viewLifecycleOwner.lifecycleScope.launch {
                     repository.deleteLibro(libro)
-                    Toast.makeText(requireContext(), "Libro eliminado", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), afirmacion, Toast.LENGTH_SHORT).show()
                     cargarLibros() // Recargar la lista tras borrar
                 }
             }
-            .setNegativeButton("Cancelar", null)
+            .setNegativeButton(abortar, null)
             .show()
     }
 
     // Inicion método para mostrar diálogo renombrar libros
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun mostrarDialogoRenombrar(libro: LibroEntity) {
-        val abortar = getString(R.string.cancelar)
+        val titulo_cambiado = getString(R.string.titulo_cambiado)
         val salvarEdicion = getString(R.string.gurdar_libro)
         val textString = getString(R.string.renombrar_libro)
         val builder = AlertDialog.Builder(requireContext())
@@ -154,7 +163,7 @@ class LeidosFragment : Fragment() {
                 // Ejecutamos la actualización en una corrutina
                 viewLifecycleOwner.lifecycleScope.launch {
                     repository.renombrarLibros(libro.id, nuevoTitulo, libro.autor)
-                    Toast.makeText(requireContext(), "Título cambiado", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), titulo_cambiado, Toast.LENGTH_SHORT).show()
                 }
             }
 

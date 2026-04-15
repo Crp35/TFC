@@ -9,8 +9,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.lectorlibros.ui.activity.MainActivity
@@ -66,6 +68,7 @@ class AudioLibrosFragment(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        Log.d("DEBUG_FRAGMENT", "AudioLibrosFragment: ¡HE NACIDO!") // <--- Añade esto
         _binding = FragmentAudioLibrosBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -75,39 +78,41 @@ class AudioLibrosFragment(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Inicializar el adaptador pasando el callback que delega en handleItemClick
-        audioAdapter = AudioAdapter { libro ->
-            handleItemClick(libro)
-        }
+        // 1. INICIALIZACIÓN: Creamos el objeto ANTES de usarlo.
+        // Esto elimina el error "lateinit property audioAdapter has not been initialized"
+        audioAdapter = AudioAdapter(
+            onItemClick = { libro -> handleItemClick(libro) },
+            onItemLongClick = { libro -> mostrarDialogoRenombrar(libro) }
+        )
 
+        // 2. CONFIGURACIÓN DE VISTA: Ahora que audioAdapter ya existe, lo conectamos
+        binding.recyclerViewAudio.layoutManager = LinearLayoutManager(requireContext())
+        binding.recyclerViewAudio.adapter = audioAdapter
 
-
-        binding.recyclerViewAudio.apply {
-            layoutManager = LinearLayoutManager(requireContext())
-            adapter = audioAdapter
-        }
-
-        // Cargar lista de todos los audiolibros desde la base de datos
+        // 3. CARGA DE DATOS: Tu lógica original intacta
         lifecycleScope.launch {
             repository.getLibrosAudio().collect { lista ->
+                Log.d("DEBUG_AUDIO","LIBROS RECIBIDOS: ${lista.size}")
                 if (lista.isEmpty()) {
                     binding.recyclerViewAudio.visibility = View.GONE
                     binding.tvNoAudio.visibility = View.VISIBLE
+                    binding.tvNoAudio.text = getString(R.string.mensaje_audiolibros)
+                    audioAdapter.submitList(lista)
                 } else {
                     binding.recyclerViewAudio.visibility = View.VISIBLE
                     binding.tvNoAudio.visibility = View.GONE
                     Log.d("AudioLibrosFragment", "Lista de audiolibros: $lista")
-                    audioAdapter.submitList(lista)  // Actualiza la lista en el adaptador
+                    audioAdapter.submitList(lista)
+                    Log.d("DEBUG_AUDIO", "Enviados ${lista.size} libros al adaptador")
                 }
             }
         }
 
-        // Debug: también listamos todos los libros (por si el filtro falla)
+        // 4. DEBUG Y POBLADO: Mantengo tu lógica de "Sutras (demo)" y raw
         lifecycleScope.launch {
             repository.getAllLibros().collect { todos ->
                 Log.d("AudioLibrosFragment", "Todos los libros en BD: $todos")
 
-                // Si está vacío, insertar un audio de prueba desde raw una sola vez
                 if (todos.isEmpty() && !seeded) {
                     seeded = true
                     try {
@@ -122,7 +127,7 @@ class AudioLibrosFragment(
             }
         }
 
-        // Si no hay audios, poblar desde raw (debug)
+        // 5. POBLADO AUTOMÁTICO: Si no hay audios, invoca poblarBDDesdeRaw
         lifecycleScope.launch {
             try {
                 val cant = repository.contarLibros(TipoColeccion.AUDIO)
@@ -178,6 +183,29 @@ class AudioLibrosFragment(
         requestPermissionLauncher.launch(getRequiredPermission())
     }
 
+    private fun mostrarDialogoRenombrar(libro: LibroEntity) {
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle(getString(R.string.renombrar))
+
+        val input = EditText(requireContext())
+        input.setText(libro.titulo)
+        builder.setView(input)
+
+        builder.setPositiveButton(getString(R.string.gurdar_libro)){ _, _ ->
+            val nuevoTitulo = input.text.toString()
+            if(nuevoTitulo.isNotEmpty()){
+                lifecycleScope.launch {
+                    repository.renombrarLibros(libro.id, nuevoTitulo, libro.autor)
+                    ToastHelper.showToast(requireContext(), getString(R.string.titulo_cambiado))
+                }
+            }
+        }
+        builder.setNegativeButton(getString(R.string.cancelar), null)
+        builder.show()
+
+
+    }
+
     private fun navigateToPlayer(libro: LibroEntity) {
         val activity = activity as? MainActivity
 
@@ -189,7 +217,7 @@ class AudioLibrosFragment(
         activity?.binding?.tvTitulo?.text = libro.titulo
 
 
-        activity?.cargarFragment(AudioPlayerFragment.newInstance(libro.id, repository))
+        //DESCOMENTAR SI ERROR activity?.cargarFragment(AudioPlayerFragment.newInstance(libro.id, repository))
 
 
         Log.d("AudioLibrosFragment", "navigateToPlayer: id=${libro.id} title=${libro.titulo}")

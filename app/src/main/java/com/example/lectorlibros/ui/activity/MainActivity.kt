@@ -4,14 +4,13 @@ import ColeccionAdapter
 import android.app.AlertDialog
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.MenuItem
 import android.view.View
-import android.widget.PopupMenu
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import com.example.lectorlibros.R
 import com.example.lectorlibros.data.db.BaseDatos
 import com.example.lectorlibros.data.factory.LibroViewModel
@@ -19,11 +18,7 @@ import com.example.lectorlibros.data.factory.LibroViewModelFactory
 import com.example.lectorlibros.data.repository.LibroRepository
 import com.example.lectorlibros.data.repository.ServicioDescargaPdf
 import com.example.lectorlibros.databinding.ActivityMainBinding
-import com.example.lectorlibros.entities.LibroEntity
-import com.example.lectorlibros.ui.enums.TipoColeccion
 import com.example.lectorlibros.ui.fragment.*
-
-import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
@@ -76,16 +71,26 @@ class MainActivity : AppCompatActivity() {
             .commit()
     }
 
+    // FUNCIÓN PARA OCULTAR/MOSTRAR LAS BARRAS DE NAVEGACIÓN Y COLECCIONES
+    fun setMenuVisibility(visible: Boolean) {
+        val visibility = if(visible) View.VISIBLE else View.GONE
+        binding.bottomNavigation.visibility = visibility
+        binding.layoutColecciones.visibility = visibility
+        binding.ivMenu.visibility = visibility
 
-
-
+        // También ocultamos el ´titulo del fragmento
+        binding.tvTitulo.visibility = visibility
+    }
     // BottomNavigation
     @RequiresApi(Build.VERSION_CODES.Q)
     fun onNavigationItemSelected(menuItem: MenuItem): Boolean {
+
+        Log.d("DEBUG_NAV", "ID pulsado: ${menuItem.itemId}")
+        Log.d("DEBUG_NAV", "ID esperado (Audio): ${R.id.menu_audio}")
         val fragment: Fragment? = when (menuItem.itemId) {
             R.id.menu_biblioteca -> BibliotecaFragment.newInstance(repository)
             R.id.menu_leidos -> LeidosFragment()
-            R.id.menu_audio -> AudioLibrosFragment(repository)
+            R.id.menu_audio -> {AudioLibrosFragment(repository)}
             R.id.menu_buscar -> BuscarFragment()
             else -> null
         }
@@ -95,7 +100,7 @@ class MainActivity : AppCompatActivity() {
             binding.tvTitulo.text = when (menuItem.itemId) {
                 R.id.menu_biblioteca -> getString(R.string.biblioteca)
                 R.id.menu_leidos -> getString(R.string.terminados)
-                R.id.menu_audio -> getString(R.string.audiolibros)
+                R.id.menu_audio -> getString(R.string.opcion_audiolibros)
                 R.id.menu_buscar -> getString(R.string.buscar)
                 else -> getString(R.string.app_name)
             }
@@ -107,12 +112,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     // Mostrar menú de colecciones
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun mostrarOpcionesColecciones() {
         val tiposTitulos = arrayOf(
             getString(R.string.opcion_libros),
             getString(R.string.opcion_terminados),
             getString(R.string.pdf),
-            getString(R.string.audiolibros),
+            getString(R.string.opcion_audiolibros),
             getString(R.string.descargados)
         )
 

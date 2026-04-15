@@ -11,6 +11,7 @@
         android:id="@+id/imgCover"
         android:layout_width="220dp"
         android:layout_height="220dp"
+        android:contentDescription="@string/descripcion_portada"
         android:scaleType="centerCrop"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -20,9 +21,10 @@
         android:id="@+id/btnVolver"
         android:layout_width="50dp"
         android:layout_height="50dp"
+        android:contentDescription="@string/descripcion_volver"
         android:src="@drawable/ic_volver"
+        app:tint="@color/white"
         android:background="@drawable/btn_fondo_redondo"
-        android:tint="@android:color/white"
         android:scaleType="centerInside"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
@@ -80,7 +82,7 @@
             android:progress="0"
             android:thumbTint="#1DB954"
             android:progressTint="#1DB954"
-            android:layout_marginTop="16dp" />
+            android:layout_marginTop="3dp"/>
 
         <LinearLayout
             android:id="@+id/controlsLayout"
@@ -88,15 +90,16 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginTop="16dp">
+            android:layout_marginTop="3dp">
 
             <ImageButton
                 android:id="@+id/btnAtras"
                 android:layout_width="42dp"
                 android:layout_height="42dp"
+                android:contentDescription="@string/descripcion_volver"
                 android:src="@drawable/ic_atras"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:tint="@android:color/white"
+                app:tint="@color/white"
                 android:scaleType="centerInside"/>
 
             <ImageButton
@@ -104,27 +107,30 @@
                 android:layout_width="42dp"
                 android:layout_height="42dp"
                 android:layout_marginHorizontal="32dp"
+                android:contentDescription="@string/descripcion_pause"
                 android:src="@drawable/ic_play"
-                android:tint="@android:color/white"
+                app:tint="@color/white"
                 android:scaleType="centerInside"/>
 
             <ImageButton
                 android:id="@+id/btnStop"
                 android:layout_width="42dp"
                 android:layout_height="42dp"
+                android:contentDescription="@string/descripcion_stop"
                 android:src="@drawable/ic_stop"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:tint="@android:color/white"
                 android:scaleType="centerInside"
+                app:tint="@color/white"
                 android:layout_marginEnd="16dp"/>
 
             <ImageButton
                 android:id="@+id/btnAdelante"
                 android:layout_width="42dp"
                 android:layout_height="42dp"
+                android:contentDescription="@string/descripcion_adelante"
                 android:src="@drawable/ic_adelante"
+                app:tint="@color/white"
                 android:background="?attr/selectableItemBackgroundBorderless"
-                android:tint="@android:color/white"
                 android:scaleType="centerInside"/>
         </LinearLayout>
     </LinearLayout>

@@ -1,5 +1,6 @@
 package com.example.lectorlibros.ui.adapter
 
+import android.provider.Settings.Global.getString
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -39,12 +40,9 @@ class LibrosAdapter(
     override fun onBindViewHolder(holder: LibroViewHolder, position: Int) {
         val libro = libros[position]
         val context = holder.itemView.context
-
-
-
         Log.d("LibrosAdapter", "Cargando libro: ${libro.titulo}")
 
-        holder.binding.ivPortada.setImageResource(R.drawable.book_open_book_read_icon)
+        holder.binding.ivPortada.setImageResource(R.drawable.ic_libro_abierto)
 
         val anchoPx = (300 * holder.itemView.resources.displayMetrics.density).toInt()
         val altoPx = (400 * holder.itemView.resources.displayMetrics.density).toInt()
@@ -88,8 +86,14 @@ class LibrosAdapter(
                 ((libro.posicionMs ?: 0L) * 100 / duracionMs).toInt().coerceAtMost(100)
             }
         }
-
-        holder.binding.tvEstado.text = if (porcentaje > 0) "$porcentaje%" else "Nuevo"
+         //holder.binding.tvEstado.text = if (porcentaje > 0) "$porcentaje%" else context.getString(R.string.estado_nuevo)
+        // Aquí manejamos los cambios en el estado del libro(Nuevo, en progreso y leído)
+        holder.binding.tvEstado.text = when{
+            libro.estado == EstadoLibro.COMPLETADO ->
+                holder.itemView.context.getString(R.string.estado_leido)
+            porcentaje > 0 -> "$porcentaje%"
+            else -> holder.itemView.context.getString(R.string.estado_nuevo)
+        }
 
         holder.binding.ivOpciones.setOnClickListener { opc ->
             onOpcionesClick(libro, opc) // opc es la view que actúa de ancla

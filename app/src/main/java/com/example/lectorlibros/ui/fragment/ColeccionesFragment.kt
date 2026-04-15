@@ -44,7 +44,11 @@ class ColeccionesFragment : Fragment() {
     private val listaLibros = mutableListOf<LibroEntity>()
 
     private val audioAdapter by lazy {
-        AudioAdapter { libro -> abrirLibro(libro) }
+        //AudioAdapter { libro -> abrirLibro(libro) }
+        AudioAdapter(
+            onItemClick = { libro -> handleAudioItemClick(libro) },
+            onItemLongClick = {  }
+        )
     }
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -131,16 +135,22 @@ class ColeccionesFragment : Fragment() {
 
                     if (tipo == TipoColeccion.AUDIO) {
                         if (binding.rvColecciones.adapter !is AudioAdapter) {
-                            binding.rvColecciones.adapter = AudioAdapter { libro ->
+                            /*binding.rvColecciones.adapter = AudioAdapter { libro ->
                                 abrirLibro(libro)
-                            }
+
+                            }*/
+
+                            binding.rvColecciones.adapter = AudioAdapter(
+                                onItemClick = { libro -> abrirLibro(libro) },
+                                onItemLongClick = {  }
+                            )
                         }
                         (binding.rvColecciones.adapter as AudioAdapter).submitList(libros)
                     } else {
                         listaLibros.clear()
                         listaLibros.addAll(libros)
 
-                        // ✅ SOLUCIÓN: Pasar los 4 parámetros al constructor
+                        // SOLUCIÓN: Pasar los 4 parámetros al constructor
                         binding.rvColecciones.adapter = LibrosAdapter(
                             listaLibros,
                             this@ColeccionesFragment,

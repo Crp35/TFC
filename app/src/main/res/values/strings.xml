@@ -5,7 +5,7 @@
     <string name="descripcion">Menú</string>
     <string name="biblioteca">Biblioteca</string>
     <string name="leidos">Leídos</string>
-    <string name="audiolibros">Audiolibros</string>
+    <string name="opcion_audiolibros">Audiolibros</string>
     <string name="buscar">Buscar</string>
     <string name="menu">Menú</string>
     <string name="pdf">PDF</string>
@@ -29,7 +29,6 @@
     <string name="busquedaInternet">Buscar en internet</string>
     <string name="preguntaBuscar">¿Dónde quieres buscar?</string>
     <string name="sinResultados">No hay resultados</string>
-    <string name="opcion_audiolibros">Audiolibros</string>
     <string name="opcion_pdf">PDF</string>
     <string name="max">100</string>
     <string name="tiempoInicial">00:00</string>
@@ -48,12 +47,19 @@
     <string name="descargar_libro">Descargar...</string>
     <string name="gurdar_libro">Guardar</string>
     <string name="cancelar">Cancelar</string>
-
-
-
-
-
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="descripcion_volver">Rebobinar 10 segundos</string>
+    <string name="descripcion_adelante">Avanzar 10 segundos</string>
+    <string name="descripcion_play">Reproducir</string>
+    <string name="descripcion_pause">Pausar</string>
+    <string name="descripcion_portada">Portada del libro</string>
+    <string name="descripcion_stop">Parar la reproducción</string>
+    <string name="descripcion_opciones">Opciones del libro</string>
+    <string name="estado_leido">Leído</string>
+    <string name="estado_nuevo">Nuevo</string>
+    <string name="titulo_cambiado">Título cambiado</string>
+    <string name="confirmar_eliminar">¿Estás seguro de que quieres eliminar este libro?</string>
+    <string name="confirmar_eliminado">Libro eliminado</string>
+    <string name="eliminar">Eliminar</string>
+    <string name="eliminar_lib">Eliminar libro</string>
+    <string name="renombrar">Renombrar</string>
 </resources>

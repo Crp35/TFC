@@ -83,7 +83,7 @@ class BuscarFragment : Fragment() {
         // Configuración de 2 columnas
         recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
 
-        // SOLUCIÓN: Adaptar la inicialización a los 4 parámetros del LibrosAdapter
+        // Adaptar la inicialización a los 4 parámetros del LibrosAdapter
         adapter = LibrosAdapter(
             listaLibros,
             this,
@@ -133,10 +133,8 @@ class BuscarFragment : Fragment() {
         popup.show()
     }
 
-    // Inicion método para mostrar diálogo renombrar libros
-
+    // Inicio método para mostrar diálogo renombrar libros
     private fun mostrarDialogoRenombrar(libro: LibroEntity) {
-        val abortar = getString(R.string.cancelar)
         val salvarEdicion = getString(R.string.gurdar_libro)
         val textString = getString(R.string.renombrar_libro)
         val builder = AlertDialog.Builder(requireContext())
@@ -165,14 +163,11 @@ class BuscarFragment : Fragment() {
                     Toast.makeText(requireContext(), "Título cambiado", Toast.LENGTH_SHORT).show()
                 }
             }
-
         }
         builder.setNegativeButton(getString(R.string.cancelar), null)
-        builder.setView(container) // Si error en la compilación prueba a borrar
+        builder.setView(container)
         builder.show()
     }
-    // Fin método para mostrar diálogo renombrar libros
-
 
     // Nueva función para confirmar eliminación
     private fun confirmarEliminacion(libro: LibroEntity) {
@@ -192,11 +187,14 @@ class BuscarFragment : Fragment() {
     }
 
     private fun configurarBusqueda() {
+        // Mantiene el SearchView expandido y pide el foco para mostrar el teclado de inmediato
         searchView.isIconified = false
+        searchView.requestFocus()
 
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
 
             override fun onQueryTextSubmit(query: String?): Boolean {
+                // Al pulsar "Enter", ejecutamos la búsqueda
                 query?.let { buscaEnLocal(it) }
                 return true
             }
@@ -216,7 +214,7 @@ class BuscarFragment : Fragment() {
                     return true
                 }
 
-                // Ejecutar búsqueda en local
+                // Ejecutar búsqueda en local en tiempo real (teclado permanece abierto)
                 buscaEnLocal(texto)
                 return true
             }
@@ -241,11 +239,8 @@ class BuscarFragment : Fragment() {
                         listaLibros.addAll(libros)
                         adapter.actualizarLibros(libros)
 
-                        // Ocultamos el teclado tras obtener el resultado
-                        val imm = requireContext().getSystemService(
-                            android.content.Context.INPUT_METHOD_SERVICE
-                        ) as android.view.inputmethod.InputMethodManager
-                        imm.hideSoftInputFromWindow(view?.windowToken, 0)
+                        // SOLUCIÓN: Se ha eliminado el InputMethodManager que cerraba el teclado.
+                        // Ahora el teclado permanece visible mientras el usuario escribe o borra.
                     }
                 }
         }
