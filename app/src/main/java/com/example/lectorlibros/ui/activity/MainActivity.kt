@@ -84,6 +84,31 @@ class MainActivity : AppCompatActivity() {
     // BottomNavigation
     @RequiresApi(Build.VERSION_CODES.Q)
     fun onNavigationItemSelected(menuItem: MenuItem): Boolean {
+        val fragment: Fragment? = when (menuItem.itemId) {
+            R.id.menu_biblioteca -> BibliotecaFragment.newInstance(repository)
+            R.id.menu_audio -> {
+                val bibliotecaFragment = BibliotecaFragment.newInstance(repository)
+                bibliotecaFragment.filtrarPorColeccion(getString(R.string.opcion_audiolibros))
+                bibliotecaFragment
+            }
+            R.id.menu_leidos -> LeidosFragment()
+            R.id.menu_buscar -> BuscarFragment()
+            else -> null
+        }
+
+        fragment?.let {
+            cargarFragment(it)
+            binding.tvTitulo.text = when (menuItem.itemId) {
+                R.id.menu_biblioteca -> getString(R.string.biblioteca)
+                R.id.menu_audio -> getString(R.string.opcion_audiolibros)
+                R.id.menu_buscar -> getString(R.string.buscar)
+                else -> getString(R.string.app_name)
+            }
+            return true
+        }
+        return false
+    }
+    /*DESCOMENTAR SI ERRORfun onNavigationItemSelected(menuItem: MenuItem): Boolean {
 
         Log.d("DEBUG_NAV", "ID pulsado: ${menuItem.itemId}")
         Log.d("DEBUG_NAV", "ID esperado (Audio): ${R.id.menu_audio}")
@@ -109,7 +134,7 @@ class MainActivity : AppCompatActivity() {
             return true
         }
         return false
-    }
+    }*/
 
     // Mostrar menú de colecciones
     @RequiresApi(Build.VERSION_CODES.Q)

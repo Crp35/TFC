@@ -36,6 +36,8 @@ class LeidosFragment : Fragment() {
 
     private lateinit var repository: LibroRepository
 
+    private val listaLibros = mutableListOf<LibroEntity>()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -137,6 +139,7 @@ class LeidosFragment : Fragment() {
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun mostrarDialogoRenombrar(libro: LibroEntity) {
+        val mensaje_titulo_vacio = getString(R.string.mensaje_titulo_vacio)
         val titulo_cambiado = getString(R.string.titulo_cambiado)
         val salvarEdicion = getString(R.string.gurdar_libro)
         val textString = getString(R.string.renombrar_libro)
@@ -160,9 +163,13 @@ class LeidosFragment : Fragment() {
         builder.setPositiveButton(salvarEdicion) { _, _ ->
             val nuevoTitulo = input.text.toString().trim()
             if(nuevoTitulo.isNotEmpty()) {
+                Toast.makeText(requireContext(), mensaje_titulo_vacio, Toast.LENGTH_SHORT).show()
+                return@setPositiveButton
+            } else {
+
                 // Ejecutamos la actualización en una corrutina
                 viewLifecycleOwner.lifecycleScope.launch {
-                    repository.renombrarLibros(libro.id, nuevoTitulo, libro.autor)
+                   // repository.renombrarLibros(libro.id, nuevoTitulo, libro.autor)
                     Toast.makeText(requireContext(), titulo_cambiado, Toast.LENGTH_SHORT).show()
                 }
             }

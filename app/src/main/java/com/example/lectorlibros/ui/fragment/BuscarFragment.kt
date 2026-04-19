@@ -238,9 +238,6 @@ class BuscarFragment : Fragment() {
                         listaLibros.clear()
                         listaLibros.addAll(libros)
                         adapter.actualizarLibros(libros)
-
-                        // SOLUCIÓN: Se ha eliminado el InputMethodManager que cerraba el teclado.
-                        // Ahora el teclado permanece visible mientras el usuario escribe o borra.
                     }
                 }
         }

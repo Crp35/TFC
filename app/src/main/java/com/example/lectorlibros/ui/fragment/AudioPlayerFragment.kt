@@ -29,6 +29,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.core.graphics.scale
+import java.io.File
+import androidx.core.net.toUri
+
 
 class AudioPlayerFragment(
     private val repository: LibroRepository
@@ -266,7 +269,10 @@ class AudioPlayerFragment(
                     isPrepared = false
                     _binding?.btnPlayPause?.setImageResource(R.drawable.ic_play)
                     stopUpdatingUI()
-                    _binding?.btnAtras?.visibility = View.VISIBLE
+                    _binding?.btnVolver?.visibility = View.GONE
+                    _binding?.btnVolver?.visibility = View.VISIBLE
+
+                    reinciarTemporizadorOcultar() // Reiniciamos el temporizador
 
                     // Marcamos COMPLETADO al terminar
                     libro?.let { currentLibro ->
@@ -280,6 +286,12 @@ class AudioPlayerFragment(
                             )
                             repository.actualizaLibros(currentLibro)
                         }
+                    }
+                    view?.post {
+                        binding.btnPlayPause.setImageResource(R.drawable.ic_play)
+                        binding.btnVolver.visibility = View.GONE
+                        binding.btnVolver.visibility = View.VISIBLE
+
                     }
                 }
 
@@ -297,10 +309,14 @@ class AudioPlayerFragment(
         if (mp.isPlaying) {
             mp.pause()
             binding.btnPlayPause.setImageResource(R.drawable.ic_play)
+            _binding?.btnVolver?.visibility = View.VISIBLE
+            _binding?.btnVolver?.visibility = View.GONE
             stopUpdatingUI()
         } else {
             mp.start()
             binding.btnPlayPause.setImageResource(R.drawable.ic_pause)
+            _binding?.btnVolver?.visibility = View.GONE
+            _binding?.btnVolver?.visibility = View.VISIBLE
             startUpdatingUI()
         }
     }
@@ -337,6 +353,9 @@ class AudioPlayerFragment(
         updateJob?.cancel()
     }
 
+    /**
+     * Funciones para pausar la reproducción
+     * */
     private fun stopAudio() {
         if (!isPrepared) return
         mediaPlayer?.pause()
@@ -345,12 +364,18 @@ class AudioPlayerFragment(
         stopUpdatingUI()
     }
 
+    /**
+     * Funciones para retroceder en 10 segundos
+     * */
     private fun seekBackward() {
         if (!isPrepared) return
         val newPos = (mediaPlayer?.currentPosition ?: 0) - 10000
         mediaPlayer?.seekTo(newPos.coerceAtLeast(0))
     }
 
+    /**
+     * Funciones para avanzar en 10 segundos
+     * */
     private fun seekForward() {
         if (!isPrepared) return
         val newPos = (mediaPlayer?.currentPosition ?: 0) + 10000
@@ -364,6 +389,28 @@ class AudioPlayerFragment(
     }
 
     fun obtenerPortadaAudio(rutaAudio: String, ancho: Int, alto: Int): Bitmap? {
+        Log.d("BUG_PORTADA", "obtenerPortadaAudio - rutaAudio: '$rutaAudio'")
+        val mmr = MediaMetadataRetriever()
+        return try {
+            if (rutaAudio.startsWith("content://")) {
+                mmr.setDataSource(requireContext(), rutaAudio.toUri())
+            } else {
+                mmr.setDataSource(File(rutaAudio).absolutePath)
+            }
+
+            val data = mmr.embeddedPicture
+            if (data != null) {
+                BitmapFactory.decodeByteArray(data, 0, data.size)
+                    ?.scale(ancho, alto)
+            } else null
+        } catch (e: Exception) {
+            Log.e("AudioPlayer", "No se pudo obtener portada: ${e.message}", e)
+            null
+        } finally {
+            try { mmr.release() } catch (_: Exception) {}
+        }
+    }
+    /* DESCOMENTAR SI ERROR O NECESIDAD fun obtenerPortadaAudio(rutaAudio: String, ancho: Int, alto: Int): Bitmap? {
         return try {
             val mmr = MediaMetadataRetriever()
             mmr.setDataSource(rutaAudio)
@@ -376,7 +423,7 @@ class AudioPlayerFragment(
             e.printStackTrace()
             null
         }
-    }
+    }*/
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onDestroyView() {

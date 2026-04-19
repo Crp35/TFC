@@ -40,14 +40,14 @@
     <string name="página"> 0 / 0 </string>
     <string name="indicador_pagina">Página %1$d de %2$d</string>
     <string name="estadoLibro">Nuevo</string>
-    <string name="bucar_libro">¿Qué estás buscando?</string>
-    <string name="renombrar_libro">Renombrer...</string>
+    <string name="bucar_libro">¿Cómo se llama el libro que buscas?</string>
+    <string name="renombrar_libro">Renombrar...</string>
     <string name="eliminar_libro">Eliminar...</string>
     <string name="importar_libro">Importar...</string>
     <string name="descargar_libro">Descargar...</string>
     <string name="gurdar_libro">Guardar</string>
     <string name="cancelar">Cancelar</string>
-    <string name="descripcion_volver">Rebobinar 10 segundos</string>
+    <string name="descripcion_volver">Volver a reproducir</string>
     <string name="descripcion_adelante">Avanzar 10 segundos</string>
     <string name="descripcion_play">Reproducir</string>
     <string name="descripcion_pause">Pausar</string>
@@ -62,4 +62,6 @@
     <string name="eliminar">Eliminar</string>
     <string name="eliminar_lib">Eliminar libro</string>
     <string name="renombrar">Renombrar</string>
+    <string name="mensaje_titulo_vacio">El título no puede estar vacío</string>
+    <string name="mensaje_titulo_ya_existe">Ya existe un libro con ese título</string>
 </resources>

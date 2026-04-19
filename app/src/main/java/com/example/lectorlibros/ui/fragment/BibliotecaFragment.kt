@@ -163,9 +163,11 @@ class BibliotecaFragment : Fragment() {
             val terminados = getString(R.string.opcion_terminados)
             val descargados = getString(R.string.descargados)
 
+            Log.d("DEBUG_AUDIOLIBROS", "coleccionActual: $coleccionActual == audio: $audio")
+
             repository.getAllLibros().collect { listaCompleta ->
 
-                // 1. Aplicamos el filtro y lo guardamos en 'listaFinal'
+                // 1. Aplicamos el filtro y lo guardamos en listaFinal
                 val listaFinal = when (coleccionActual) {
                     pdf -> listaCompleta.filter { it.tipoLibro == TipoDeLibro.PDF }
                     audio -> listaCompleta.filter { it.tipoLibro == TipoDeLibro.AUDIO }
@@ -231,7 +233,7 @@ class BibliotecaFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.Q)
     fun filtrarPorColeccion(tipo: String) {
         coleccionActual = tipo
-        cargarLibros() // Recarga la lista con el nuevo filtro
+        //DESCOMENTAR SI ERROR O NECESIDAD cargarLibros() // Recarga la lista con el nuevo filtro
     }
 
     private fun abrirLibro(libro: LibroEntity) {

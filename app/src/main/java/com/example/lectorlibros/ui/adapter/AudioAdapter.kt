@@ -2,6 +2,7 @@ package com.example.lectorlibros.ui.adapter
 
 import android.graphics.BitmapFactory
 import android.media.MediaMetadataRetriever
+import android.net.Uri
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -20,14 +21,45 @@ class AudioAdapter(
 
     inner class AudioViewHolder(val binding: ItemAudioBinding) : RecyclerView.ViewHolder(
         binding.root) {
-
         fun bind(libro: LibroEntity) {
             binding.tvTitle.text = libro.titulo
 
             val ruta = libro.uriAudio
             if (!ruta.isNullOrEmpty()) {
+                val retriever = MediaMetadataRetriever()
                 try {
-                    val retriever = MediaMetadataRetriever()
+                    if (ruta.startsWith("content://")) {
+                        retriever.setDataSource(binding.root.context, Uri.parse(ruta))
+                    } else {
+                        retriever.setDataSource(ruta)
+                    }
+
+                    val art = retriever.embeddedPicture
+                    if (art != null) {
+                        val bitmap = BitmapFactory.decodeByteArray(art, 0, art.size)
+                        binding.imgCover.setImageBitmap(bitmap)
+                    } else {
+                        binding.imgCover.setImageResource(R.drawable.ic_nota_musical)
+                    }
+                } catch (ex: Exception) {
+                    Log.e("AudioAdapter", "Error portada audio: ${ex.message}", ex)
+                    binding.imgCover.setImageResource(R.drawable.ic_nota_musical)
+                } finally {
+                    try { retriever.release() } catch (_: Exception) {}
+                }
+            } else {
+                binding.imgCover.setImageResource(R.drawable.ic_nota_musical)
+            }
+        }
+
+        /* DESCOMENTAR SI ERROR O NECESIDAD fun bind(libro: LibroEntity) {
+            binding.tvTitle.text = libro.titulo
+
+            val ruta = libro.uriAudio
+            if (!ruta.isNullOrEmpty()) {
+                val retriever = MediaMetadataRetriever()
+
+                try {
                     retriever.setDataSource(ruta)
                     val art = retriever.embeddedPicture
                     if (art != null) {
@@ -49,7 +81,7 @@ class AudioAdapter(
                 Log.d("AudioAdapter", "Item clicked: id=${libro.id} title=${libro.titulo}")
                 onItemClick.invoke(libro)
             }
-        }
+        }*/
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AudioViewHolder {
@@ -63,7 +95,8 @@ class AudioAdapter(
 
     override fun onBindViewHolder(holder: AudioViewHolder, position: Int) {
         val libro = getItem(position)
-        holder.binding.root.setOnClickListener { onItemClick (libro) }
+        holder.bind(libro)
+        // DESCOMENTAR SI ERROR O NECESIDAD holder.binding.root.setOnClickListener { onItemClick (libro) }
         //holder.bind(getItem(position))
 
         // Click normal
@@ -74,6 +107,7 @@ class AudioAdapter(
         // Click largo
         holder.itemView.setOnClickListener {
             onItemLongClick(libro)
+            true
             }
         }
 

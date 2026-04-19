@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -79,6 +80,7 @@ class ColeccionesFragment : Fragment() {
         return binding.root
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -119,6 +121,7 @@ class ColeccionesFragment : Fragment() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun mostrarLibros(tipo: TipoColeccion) {
         fetchJob?.cancel()
         fetchJob = viewLifecycleOwner.lifecycleScope.launch {
@@ -164,6 +167,7 @@ class ColeccionesFragment : Fragment() {
     }
 
     // Función necesaria para el menú CRUD
+    @RequiresApi(Build.VERSION_CODES.Q)
     fun showPopupMenu(libro: LibroEntity, ancla: View) {
         val popup = PopupMenu(requireContext(), ancla)
         popup.inflate(R.menu.menu_item_libro)
@@ -185,6 +189,7 @@ class ColeccionesFragment : Fragment() {
     }
 
     // Función para confirmar y ejecutar la eliminación
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun confirmarEliminacion(libro: LibroEntity) {
         AlertDialog.Builder(requireContext())
             .setTitle("Eliminar libro")

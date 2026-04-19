@@ -10,6 +10,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.FrameLayout
+import android.widget.PopupMenu
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
@@ -23,8 +26,10 @@ import com.example.lectorlibros.entities.LibroEntity
 import com.example.lectorlibros.data.repository.LibroRepository
 import com.example.lectorlibros.databinding.FragmentAudioLibrosBinding
 import com.example.lectorlibros.ui.adapter.AudioAdapter
+import com.example.lectorlibros.ui.adapter.LibrosAdapter
 import com.example.lectorlibros.ui.enums.TipoColeccion
 import com.example.lectorlibros.util.ToastHelper
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 class AudioLibrosFragment(
@@ -68,7 +73,6 @@ class AudioLibrosFragment(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        Log.d("DEBUG_FRAGMENT", "AudioLibrosFragment: ¡HE NACIDO!") // <--- Añade esto
         _binding = FragmentAudioLibrosBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -78,41 +82,51 @@ class AudioLibrosFragment(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. INICIALIZACIÓN: Creamos el objeto ANTES de usarlo.
-        // Esto elimina el error "lateinit property audioAdapter has not been initialized"
+        /* DESCOMENTAR SI ERROR // Inicializar el adaptador pasando el callback que delega en handleItemClick
+        audioAdapter = AudioAdapter { libro ->
+            handleItemClick(libro)
+        }*/
+
+        // Inicializar el adaptador pasando AMBOS callbacks
         audioAdapter = AudioAdapter(
-            onItemClick = { libro -> handleItemClick(libro) },
-            onItemLongClick = { libro -> mostrarDialogoRenombrar(libro) }
+            onItemClick = { libro ->
+                handleItemClick(libro)
+            },
+            onItemLongClick = { libro ->
+                // Como el adaptador no nos da la vista del item,
+                // usamos la vista raíz del fragmento como ancla para el menú
+                showPopupMenu(libro, binding.root)
+            }
         )
 
-        // 2. CONFIGURACIÓN DE VISTA: Ahora que audioAdapter ya existe, lo conectamos
-        binding.recyclerViewAudio.layoutManager = LinearLayoutManager(requireContext())
-        binding.recyclerViewAudio.adapter = audioAdapter
 
-        // 3. CARGA DE DATOS: Tu lógica original intacta
+
+        binding.recyclerViewAudio.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = audioAdapter
+        }
+
+        // Cargar lista de todos los audiolibros desde la base de datos
         lifecycleScope.launch {
             repository.getLibrosAudio().collect { lista ->
-                Log.d("DEBUG_AUDIO","LIBROS RECIBIDOS: ${lista.size}")
                 if (lista.isEmpty()) {
                     binding.recyclerViewAudio.visibility = View.GONE
                     binding.tvNoAudio.visibility = View.VISIBLE
-                    binding.tvNoAudio.text = getString(R.string.mensaje_audiolibros)
-                    audioAdapter.submitList(lista)
                 } else {
                     binding.recyclerViewAudio.visibility = View.VISIBLE
                     binding.tvNoAudio.visibility = View.GONE
                     Log.d("AudioLibrosFragment", "Lista de audiolibros: $lista")
-                    audioAdapter.submitList(lista)
-                    Log.d("DEBUG_AUDIO", "Enviados ${lista.size} libros al adaptador")
+                    audioAdapter.submitList(lista)  // Actualiza la lista en el adaptador
                 }
             }
         }
 
-        // 4. DEBUG Y POBLADO: Mantengo tu lógica de "Sutras (demo)" y raw
+        // Debug: también listamos todos los libros (por si el filtro falla)
         lifecycleScope.launch {
             repository.getAllLibros().collect { todos ->
                 Log.d("AudioLibrosFragment", "Todos los libros en BD: $todos")
 
+                // Si está vacío, insertar un audio de prueba desde raw una sola vez
                 if (todos.isEmpty() && !seeded) {
                     seeded = true
                     try {
@@ -127,7 +141,7 @@ class AudioLibrosFragment(
             }
         }
 
-        // 5. POBLADO AUTOMÁTICO: Si no hay audios, invoca poblarBDDesdeRaw
+        // Si no hay audios, poblar desde raw (debug)
         lifecycleScope.launch {
             try {
                 val cant = repository.contarLibros(TipoColeccion.AUDIO)
@@ -140,6 +154,105 @@ class AudioLibrosFragment(
                 Log.e("AudioLibrosFragment", "Error al poblar BD: ${e.message}", e)
             }
         }
+    }
+
+    // Función corregida para mostrar el menú CRUD
+    @RequiresApi(Build.VERSION_CODES.Q)
+    fun showPopupMenu(libro: LibroEntity, ancla: View) {
+        val popup = PopupMenu(requireContext(), ancla)
+        // CAMBIO: Se eliminó el segundo argumento 'popup.menu' para evitar el error de compilación
+        popup.inflate(R.menu.menu_item_libro)
+
+        popup.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+
+                R.id.action_rename -> {
+                    //Toast.makeText(requireContext(), "Renombrar: ${libro.titulo}", Toast.LENGTH_SHORT).show()
+                    mostrarDialogoRenombrar(libro)
+                    true
+                }
+
+                R.id.action_delete -> {
+                    // Llamada a la función de eliminación real
+                    confirmarEliminacion(libro)
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
+    // Inicion método para mostrar diálogo renombrar libros
+
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun mostrarDialogoRenombrar(libro: LibroEntity) {
+        val abortar = getString(R.string.cancelar)
+        val salvarEdicion = getString(R.string.gurdar_libro)
+        val textString = getString(R.string.renombrar_libro)
+        val tituloCambiado = getString(R.string.titulo_cambiado)
+
+        val builder = AlertDialog.Builder(requireContext())
+        builder.setTitle(textString)
+
+        val input = EditText(requireContext())
+        input.setText(libro.titulo)
+        input.selectAll()
+
+        val container = FrameLayout(requireContext())
+        val params = FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        params.setMargins(60, 20, 60, 0)
+        input.layoutParams = params
+        container.addView(input)
+
+        builder.setPositiveButton(salvarEdicion) { _, _ ->
+            val nuevoTitulo = input.text.toString().trim()
+            if(nuevoTitulo.isNotEmpty()) {
+                viewLifecycleOwner.lifecycleScope.launch {
+                    repository.renombrarLibros(libro.id, nuevoTitulo, libro.autor)
+
+                    // ≪≪≪ SOLO ESTAS DOS LÍNEAS AÑADES (sin cambiar nada más) ≫≫≫
+                    val listaActualizada = repository.getLibrosAudio().firstOrNull() ?: emptyList()
+                    audioAdapter.submitList(listaActualizada.toList())
+
+                    Toast.makeText(requireContext(), tituloCambiado,
+                        Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+        builder.setNegativeButton(abortar, null)
+        builder.setView(container)
+        builder.show()
+    }
+
+    // Fin método para mostrar diálogo renombrar libros
+
+    // Lógica para eliminar el libro de la base de datos
+    @RequiresApi(Build.VERSION_CODES.Q)
+    private fun confirmarEliminacion(libro: LibroEntity) {
+        val cancelar = getString(R.string.cancelar)
+        val preguntaEliminar = getString(R.string.confirmar_eliminar)
+        val eliminar = getString(R.string.eliminar)
+        val elimino = getString(R.string.confirmar_eliminado)
+        val eliminado = getString(R.string.eliminar_lib)
+        AlertDialog.Builder(requireContext())
+            .setTitle(eliminar)
+            // El usuario ve el título, así sabe qué está borrando
+            .setMessage("$preguntaEliminar\n'${libro.titulo}'?")
+            .setPositiveButton(elimino) { _, _ ->
+                viewLifecycleOwner.lifecycleScope.launch {
+                    // Usamos el ID internamente para que la DB sepa exactamente cuál es
+                    repository.deleteLibro(libro)
+
+                    Toast.makeText(requireContext(), "${libro.titulo} $eliminado",
+                        Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton(cancelar, null)
+            .show()
     }
 
     private fun getRequiredPermission(): String {
@@ -183,29 +296,6 @@ class AudioLibrosFragment(
         requestPermissionLauncher.launch(getRequiredPermission())
     }
 
-    private fun mostrarDialogoRenombrar(libro: LibroEntity) {
-        val builder = AlertDialog.Builder(requireContext())
-        builder.setTitle(getString(R.string.renombrar))
-
-        val input = EditText(requireContext())
-        input.setText(libro.titulo)
-        builder.setView(input)
-
-        builder.setPositiveButton(getString(R.string.gurdar_libro)){ _, _ ->
-            val nuevoTitulo = input.text.toString()
-            if(nuevoTitulo.isNotEmpty()){
-                lifecycleScope.launch {
-                    repository.renombrarLibros(libro.id, nuevoTitulo, libro.autor)
-                    ToastHelper.showToast(requireContext(), getString(R.string.titulo_cambiado))
-                }
-            }
-        }
-        builder.setNegativeButton(getString(R.string.cancelar), null)
-        builder.show()
-
-
-    }
-
     private fun navigateToPlayer(libro: LibroEntity) {
         val activity = activity as? MainActivity
 
@@ -217,7 +307,7 @@ class AudioLibrosFragment(
         activity?.binding?.tvTitulo?.text = libro.titulo
 
 
-        //DESCOMENTAR SI ERROR activity?.cargarFragment(AudioPlayerFragment.newInstance(libro.id, repository))
+        activity?.cargarFragment(AudioPlayerFragment.newInstance(libro.id, repository))
 
 
         Log.d("AudioLibrosFragment", "navigateToPlayer: id=${libro.id} title=${libro.titulo}")
