@@ -26,7 +26,6 @@ import com.example.lectorlibros.entities.LibroEntity
 import com.example.lectorlibros.data.repository.LibroRepository
 import com.example.lectorlibros.databinding.FragmentAudioLibrosBinding
 import com.example.lectorlibros.ui.adapter.AudioAdapter
-import com.example.lectorlibros.ui.adapter.LibrosAdapter
 import com.example.lectorlibros.ui.enums.TipoColeccion
 import com.example.lectorlibros.util.ToastHelper
 import kotlinx.coroutines.flow.firstOrNull
@@ -82,10 +81,6 @@ class AudioLibrosFragment(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        /* DESCOMENTAR SI ERROR // Inicializar el adaptador pasando el callback que delega en handleItemClick
-        audioAdapter = AudioAdapter { libro ->
-            handleItemClick(libro)
-        }*/
 
         // Inicializar el adaptador pasando AMBOS callbacks
         audioAdapter = AudioAdapter(
@@ -93,12 +88,10 @@ class AudioLibrosFragment(
                 handleItemClick(libro)
             },
             onItemLongClick = { libro ->
-                // Como el adaptador no nos da la vista del item,
-                // usamos la vista raíz del fragmento como ancla para el menú
+                // Como el adaptador no nos da la vista del item, usamos la vista raíz del fragmento como ancla para el menú
                 showPopupMenu(libro, binding.root)
             }
         )
-
 
 
         binding.recyclerViewAudio.apply {
@@ -131,7 +124,7 @@ class AudioLibrosFragment(
                     seeded = true
                     try {
                         requireContext().resources.openRawResource(R.raw.sutras).use { input ->
-                            repository.guardarAudio("Sutras (demo)", getString(R.string.nombreAutor), input, "sutras_demo.mp3")
+                            repository.guardarAudio("Sutras (demo)", getString(R.string.autor_desconocido), input, "sutras_demo.mp3")
                         }
                         Log.d("AudioLibrosFragment", "Se insertó audio de prueba desde raw")
                     } catch (e: Exception) {
@@ -156,18 +149,16 @@ class AudioLibrosFragment(
         }
     }
 
-    // Función corregida para mostrar el menú CRUD
+    // Función para mostrar el menú CRUD
     @RequiresApi(Build.VERSION_CODES.Q)
     fun showPopupMenu(libro: LibroEntity, ancla: View) {
         val popup = PopupMenu(requireContext(), ancla)
-        // CAMBIO: Se eliminó el segundo argumento 'popup.menu' para evitar el error de compilación
         popup.inflate(R.menu.menu_item_libro)
 
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
 
                 R.id.action_rename -> {
-                    //Toast.makeText(requireContext(), "Renombrar: ${libro.titulo}", Toast.LENGTH_SHORT).show()
                     mostrarDialogoRenombrar(libro)
                     true
                 }
@@ -183,7 +174,7 @@ class AudioLibrosFragment(
         popup.show()
     }
 
-    // Inicion método para mostrar diálogo renombrar libros
+    // Método para mostrar diálogo renombrar libros
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private fun mostrarDialogoRenombrar(libro: LibroEntity) {
@@ -214,7 +205,6 @@ class AudioLibrosFragment(
                 viewLifecycleOwner.lifecycleScope.launch {
                     repository.renombrarLibros(libro.id, nuevoTitulo, libro.autor)
 
-                    // ≪≪≪ SOLO ESTAS DOS LÍNEAS AÑADES (sin cambiar nada más) ≫≫≫
                     val listaActualizada = repository.getLibrosAudio().firstOrNull() ?: emptyList()
                     audioAdapter.submitList(listaActualizada.toList())
 

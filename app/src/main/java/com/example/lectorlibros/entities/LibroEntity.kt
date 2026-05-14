@@ -20,6 +20,7 @@ data class LibroEntity(
     var tipoLibro: TipoDeLibro,
     var leido: Boolean = false,
     var uriPDF: String? = null,
+    var uriEpub: String? = null,
     var uriAudio: String? = null,
     var ultimaPosicion: Int = 0,
 ): Serializable

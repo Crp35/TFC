@@ -20,19 +20,20 @@
         <!-- MAIN ACTIVITY -->
         <activity
             android:name=".ui.activity.MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:screenOrientation="fullUser"
+            android:configChanges="orientation|screenSize|keyboardHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- DECLARMOS QUE PODEMOS LEER PDFs Y REPRODUCIR AUDIOS -->
+        <!-- IMPORTACIÓN DE PDFs: recibe el PDF desde fuera, lo guarda y lanza el lector -->
         <activity
-            android:name=".ui.players.PdfReaderActivity"
-            android:label="Leer en Leo"
+            android:name=".ui.players.PdfImportActivity"
+            android:label="@string/importar_pdf"
             android:exported="true">
-
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -41,14 +42,26 @@
                 <data android:scheme="content" />
                 <data android:mimeType="application/pdf" />
             </intent-filter>
-
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/pdf" />
+            </intent-filter>
         </activity>
 
+        <!-- LECTOR DE PDFs: solo se lanza desde dentro de la app, nunca desde fuera -->
+        <activity
+            android:name=".ui.players.PdfReaderActivity"
+            android:label="Leer en Leo"
+            android:exported="false">
+            <!-- Sin intent-filter: elimina el conflicto con PdfImportActivity -->
+        </activity>
+
+        <!-- IMPORTACIÓN Y REPRODUCCIÓN DE AUDIOS -->
         <activity
             android:name=".ui.players.AudioImportActivity"
-            android:label="Escuchar en Leo"
+            android:label="@string/importar_audio"
             android:exported="true">
-
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

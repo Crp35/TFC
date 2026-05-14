@@ -224,7 +224,7 @@ class BuscarFragment : Fragment() {
     private fun buscaEnLocal(titulo: String) {
         collectJob?.cancel()
 
-        // Lanzar un job para recoger resultados en tiempo real
+        // Lanzar el trabajo de búsqueda en una corrutina para recoger resultados en tiempo real
         collectJob = lifecycleScope.launch {
             viewModel.buscarLibrosPorTitulo("%$titulo%") // Búsqueda parcial
                 .collectLatest { libros ->

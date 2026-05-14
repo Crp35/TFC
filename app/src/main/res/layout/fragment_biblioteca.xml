@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".ui.fragment.BibliotecaFragment">
 
-    <!-- Mensaje si no hay libros android:textSize ="18sp"-->
+    <!-- Mensaje si no hay libros-->
     <TextView
         android:id="@+id/tvEmpty"
         android:layout_width="wrap_content"
@@ -14,7 +14,7 @@
         android:text="@string/mensaje_no_libros"
         android:layout_gravity="center"
         android:textSize="18sp"
-        android:textColor="@android:color/black"
+        android:textColor="@color/colorBotones"
         android:visibility="gone"/>
 
 

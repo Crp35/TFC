@@ -169,7 +169,6 @@ class LeidosFragment : Fragment() {
 
                 // Ejecutamos la actualización en una corrutina
                 viewLifecycleOwner.lifecycleScope.launch {
-                   // repository.renombrarLibros(libro.id, nuevoTitulo, libro.autor)
                     Toast.makeText(requireContext(), titulo_cambiado, Toast.LENGTH_SHORT).show()
                 }
             }

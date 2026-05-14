@@ -69,6 +69,10 @@ interface LibroDao {
     @Query("SELECT COUNT(*) FROM libro WHERE tipoLibro = 'PDF'")
     suspend fun countLibrosTotalLibrosPDF(): Int
 
+    @Query("SELECT * FROM libro")
+    suspend fun getAllLibrosOnce(): List<LibroEntity>
+
+
 
     /**
      * ACTUALIZAMOS SOLO EL TÍTULO Y EL AUTOR DE UN LIBRO
@@ -104,10 +108,7 @@ interface LibroDao {
     fun buscarLibrosPorTitulo(texto: String): Flow<List<LibroEntity>>
 
 
-
-
     @Update
     suspend fun actualizarLibro(libro: LibroEntity)
-
 
 }

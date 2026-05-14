@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.lectorlibros.R
 import com.example.lectorlibros.entities.LibroEntity
 import com.example.lectorlibros.databinding.ItemAudioBinding
+import androidx.core.net.toUri
 
 
 class AudioAdapter(
@@ -29,7 +30,7 @@ class AudioAdapter(
                 val retriever = MediaMetadataRetriever()
                 try {
                     if (ruta.startsWith("content://")) {
-                        retriever.setDataSource(binding.root.context, Uri.parse(ruta))
+                        retriever.setDataSource(binding.root.context, ruta.toUri())
                     } else {
                         retriever.setDataSource(ruta)
                     }
@@ -52,36 +53,6 @@ class AudioAdapter(
             }
         }
 
-        /* DESCOMENTAR SI ERROR O NECESIDAD fun bind(libro: LibroEntity) {
-            binding.tvTitle.text = libro.titulo
-
-            val ruta = libro.uriAudio
-            if (!ruta.isNullOrEmpty()) {
-                val retriever = MediaMetadataRetriever()
-
-                try {
-                    retriever.setDataSource(ruta)
-                    val art = retriever.embeddedPicture
-                    if (art != null) {
-                        val bitmap = BitmapFactory.decodeByteArray(art, 0, art.size)
-                        binding.imgCover.setImageBitmap(bitmap)
-                    } else {
-                        binding.imgCover.setImageResource(R.drawable.ic_nota_musical)
-                    }
-                    retriever.release()
-                } catch (ex: Exception) {
-                    Log.e("AudioAdapter", "Error obteniendo artwork del audio: ${ex.message}", ex)
-                    binding.imgCover.setImageResource(R.drawable.ic_nota_musical)
-                }
-            } else {
-                binding.imgCover.setImageResource(R.drawable.ic_nota_musical)
-            }
-
-            binding.root.setOnClickListener {
-                Log.d("AudioAdapter", "Item clicked: id=${libro.id} title=${libro.titulo}")
-                onItemClick.invoke(libro)
-            }
-        }*/
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AudioViewHolder {
@@ -96,8 +67,6 @@ class AudioAdapter(
     override fun onBindViewHolder(holder: AudioViewHolder, position: Int) {
         val libro = getItem(position)
         holder.bind(libro)
-        // DESCOMENTAR SI ERROR O NECESIDAD holder.binding.root.setOnClickListener { onItemClick (libro) }
-        //holder.bind(getItem(position))
 
         // Click normal
         holder.itemView.setOnClickListener {

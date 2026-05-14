@@ -2,15 +2,17 @@ package com.example.lectorlibros.ui.activity
 
 import ColeccionAdapter
 import android.app.AlertDialog
+import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.MenuItem
 import android.view.View
+import android.widget.PopupMenu
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import android.widget.Toast
 import com.example.lectorlibros.R
 import com.example.lectorlibros.data.db.BaseDatos
 import com.example.lectorlibros.data.factory.LibroViewModel
@@ -32,8 +34,58 @@ class MainActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Iniciamos el binding
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        //Inicio lógica opciones generales
+
+        // Inicializamos el binding
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // Usamos el binding con seguridad
+        binding.ivOpcionesBiblioteca.setOnClickListener { ancla ->
+            val popup = PopupMenu(this, ancla)
+            popup.menu.apply {
+                add(0,R.id.action_import,0,getString(R.string.importar_libro))
+                    .setIcon(R.drawable.ic_a_adir)
+                add(0,R.id.action_download,0,getString(R.string.descargar_libro))
+                    .setIcon(R.drawable.ic_descargar)
+            }
+            popup.setOnMenuItemClickListener { menuItem ->
+                when(menuItem.itemId){
+                    R.id.action_import ->{
+                        // Delegamos la importación al fragmento activo ( BibliotecaFragment )
+                        val fragmentoActual = supportFragmentManager
+                            .findFragmentById(R.id.fragmentContainer)
+                        if (fragmentoActual is BibliotecaFragment){
+                            fragmentoActual.lanzarImportacion()
+                        }else{
+                            // Si no estamos en Biblioteca, la cargamos y luego importamos
+                            val fragmentoBiblioteca = BibliotecaFragment.newInstance(repository)
+                            binding.root.post {
+                                fragmentoBiblioteca.lanzarImportacion()
+                            }
+                        }
+                        true
+                    }
+                    R.id.action_download ->{
+                        // Aquí irá la lógica de descargar cuando sea implementada
+                        Toast.makeText(this, getString(R.string.futura_implementacion),
+                            Toast.LENGTH_SHORT).show()
+                        true
+                    }
+                    else -> false
+                }
+            }
+            popup.show()
+        }
+
+        // Fin opciones generales
+
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         // Inicializamos DAO y Repository
         val libroDao = BaseDatos.getDatabase(this).libroDao()
@@ -43,11 +95,6 @@ class MainActivity : AppCompatActivity() {
         // Cargamos fragmento inicial
         cargarFragment(BibliotecaFragment.newInstance(repository))
         binding.tvTitulo.text = getString(R.string.biblioteca)
-
-        // Insertar libros de prueba
-        /*lifecycleScope.launch {
-            repository.pruebaInsertarLibros()
-        }*/
 
         // Configurar listeners
         binding.layoutColecciones.setOnClickListener {
@@ -62,13 +109,34 @@ class MainActivity : AppCompatActivity() {
         binding.ivMenu.setOnClickListener {
             mostrarOpcionesColecciones()
         }
+        // LÓGICA BOTÓN VOLVER ATRÁS
+
+        binding.ivVolverAtras.setOnClickListener {
+            volverBiblioteca()
+        }
+        // Fin lógica botón volver atrás
     }
+    //Inicio lógica botón volver atrás
+    fun volverBiblioteca(){
+        cargarFragment(BibliotecaFragment.newInstance(repository))
+        binding.tvTitulo.text = getString(R.string.biblioteca)
+        binding.bottomNavigation.selectedItemId = R.id.menu_biblioteca
+
+        setMenuVisibility(true)
+        // Nos aseguramos de que esta visible siempre
+        binding.ivVolverAtras.visibility = View.VISIBLE
+        binding.ivVolverAtras.alpha = 1f
+    }
+    // Fin lógica botón volver atrás
 
     // Carga cualquier fragment
     fun cargarFragment(fragment: Fragment) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.fragmentContainer, fragment)
             .commit()
+
+        // Nos aseguramos de que tras cada cambio de fragmento, el botón permanece
+        binding.ivVolverAtras.visibility = View.VISIBLE
     }
 
     // FUNCIÓN PARA OCULTAR/MOSTRAR LAS BARRAS DE NAVEGACIÓN Y COLECCIONES
@@ -108,33 +176,28 @@ class MainActivity : AppCompatActivity() {
         }
         return false
     }
-    /*DESCOMENTAR SI ERRORfun onNavigationItemSelected(menuItem: MenuItem): Boolean {
 
-        Log.d("DEBUG_NAV", "ID pulsado: ${menuItem.itemId}")
-        Log.d("DEBUG_NAV", "ID esperado (Audio): ${R.id.menu_audio}")
-        val fragment: Fragment? = when (menuItem.itemId) {
-            R.id.menu_biblioteca -> BibliotecaFragment.newInstance(repository)
-            R.id.menu_leidos -> LeidosFragment()
-            R.id.menu_audio -> {AudioLibrosFragment(repository)}
-            R.id.menu_buscar -> BuscarFragment()
-            else -> null
-        }
-
-        fragment?.let {
-            cargarFragment(it)
-            binding.tvTitulo.text = when (menuItem.itemId) {
-                R.id.menu_biblioteca -> getString(R.string.biblioteca)
-                R.id.menu_leidos -> getString(R.string.terminados)
-                R.id.menu_audio -> getString(R.string.opcion_audiolibros)
-                R.id.menu_buscar -> getString(R.string.buscar)
-                else -> getString(R.string.app_name)
+    // Inicio lógica de mostrar solo el indicador de páginas y botón volver y página(modo horizontal)
+    fun alternarControlesLectura(){
+        val visibilidadActual = binding.ivVolverAtras.visibility
+        if(visibilidadActual == View.VISIBLE){
+            // Si se ven, los ocultamos con una pequeña animación para evitar la brusquedad
+            binding.ivVolverAtras.animate().alpha(0f).setDuration(200).withEndAction {
+                binding.ivVolverAtras.visibility = View.GONE
             }
-            binding.layoutColecciones.visibility = View.VISIBLE
-            binding.ivMenu.visibility = View.VISIBLE
-            return true
+            binding.tvTitulo.animate().alpha(0f).setDuration(200).withEndAction {
+                binding.tvTitulo.visibility = View.GONE
+            }
+        }else{
+            // Sí están ocultos, los mostramos
+            binding.ivVolverAtras.visibility = View.VISIBLE
+            binding.tvTitulo.visibility = View.VISIBLE
+            binding.ivVolverAtras.animate().alpha(1f).setDuration(200)
+            binding.tvTitulo.animate().alpha(1f).setDuration(200)
+
         }
-        return false
-    }*/
+    }
+    // Fin lógica de mostrar solo volver y página(modo horizontal)
 
     // Mostrar menú de colecciones
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -165,15 +228,15 @@ class MainActivity : AppCompatActivity() {
         adapter.onItemClick = { position, titulo ->
             alertDialog.dismiss()
 
-            // 1. Buscamos si el fragmento actual es la Biblioteca
+            // Buscamos si el fragmento actual es la Biblioteca
             val fragmentoActual = supportFragmentManager.findFragmentById(R.id.fragmentContainer)
 
             if (fragmentoActual is BibliotecaFragment) {
-                // 2. Si estamos en Biblioteca, simplemente le decimos que filtre
+                // Si estamos en Biblioteca, simplemente le decimos que filtre
                 fragmentoActual.filtrarPorColeccion(titulo)
                 binding.tvTitulo.text = titulo
             } else {
-                // 3. Si no estamos en Biblioteca (ej. estamos en Buscar),
+                // Si no estamos en Biblioteca (ej. estamos en Buscar),
                 // cargamos la Biblioteca y le pasamos el filtro (opcional)
                 val fragmentoBiblioteca = BibliotecaFragment.newInstance(repository)
                 cargarFragment(fragmentoBiblioteca)

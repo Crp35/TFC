@@ -2,10 +2,12 @@ package com.example.lectorlibros.ui.players
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.OpenableColumns
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.example.lectorlibros.R
@@ -25,9 +27,9 @@ class AudioImportActivity : AppCompatActivity() {
 
     private lateinit var repository: LibroRepository
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_audio_import)
 
         // Inicializar repositorio y DAO
         val dao = BaseDatos.getDatabase(this).libroDao()
@@ -42,31 +44,45 @@ class AudioImportActivity : AppCompatActivity() {
         if (uri != null) {
             importarAudio(uri)
         } else {
-            Toast.makeText(this, "No se recibió ningún audio", Toast.LENGTH_SHORT).show()
+            val mensaje = getString(R.string.error_recepcion_audio)
+            Toast.makeText(this, mensaje, Toast.LENGTH_SHORT).show()
             finish()
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun importarAudio(uri: Uri) {
         lifecycleScope.launch {
             try {
-                // 1. Obtener el nombre real del archivo para el título
-                val nombreArchivoConExtension = obtenerNombreDesdeUri(uri) ?: "Audio_${System.currentTimeMillis()}"
+                // Obtener el nombre real del archivo para el título
+                val nombreArchivoConExtension = obtenerNombreDesdeUri(uri) ?:
+                "Audio_${System.currentTimeMillis()}"
                 val tituloLimpio = nombreArchivoConExtension
                     .replace(".mp3", "", ignoreCase = true)
                     .replace(".wav", "", ignoreCase = true)
                     .replace(".ogg", "", ignoreCase = true)
 
-                // 2. Copiar el archivo al almacenamiento interno (en hilo secundario)
+                // Copiar el archivo al almacenamiento interno (en hilo secundario)
                 val rutaLocal = withContext(Dispatchers.IO) {
                     guardarAudioEnInterno(uri, nombreArchivoConExtension)
                 }
 
-                // 3. Crear la entidad LibroEntity con tus parámetros específicos
+                // Verificamos la existencia del título
+                val tituloExiste = getString(R.string.ya_existe)
+                val yaExiste = repository.existeLibroConTitulo(tituloLimpio)
+                if(yaExiste){
+                    Toast.makeText(this@AudioImportActivity,
+                        "$tituloExiste\" $tituloLimpio\"",
+                        Toast.LENGTH_LONG).show()
+                    finish()
+                    return@launch
+                }
+
+                // Crear la entidad LibroEntity con sus parámetros específicos
                 val nuevoLibroAudio = LibroEntity(
                     titulo = tituloLimpio,
-                    autor = "Desconocido",
-                    uriAudio = rutaLocal,         // Nombre de parámetro corregido
+                    autor = getString(R.string.autor_desconocido),
+                    uriAudio = rutaLocal,
                     tipoLibro = TipoDeLibro.AUDIO,
                     descargado = true,
                     estado = EstadoLibro.NUEVO,
@@ -77,11 +93,12 @@ class AudioImportActivity : AppCompatActivity() {
                     ultimaPosicion = 0
                 )
 
-                // 4. Insertar en Room
+                // Insertamos el audio en Room
                 repository.insertLibro(nuevoLibroAudio)
 
-                // 5. Feedback y navegación
-                Toast.makeText(this@AudioImportActivity, "Audio importado: $tituloLimpio", Toast.LENGTH_LONG).show()
+                // Mostrar un mensaje y navegación
+                val mensaje = getString(R.string.audiolibro_importado)
+                Toast.makeText(this@AudioImportActivity, "$mensaje: $tituloLimpio", Toast.LENGTH_LONG).show()
 
                 // Volver a la MainActivity para refrescar la lista
                 val mainIntent = Intent(this@AudioImportActivity, MainActivity::class.java)
@@ -90,8 +107,9 @@ class AudioImportActivity : AppCompatActivity() {
                 finish()
 
             } catch (e: Exception) {
-                Log.e("AudioImport", "Error crítico: ${e.message}")
-                Toast.makeText(this@AudioImportActivity, "Error al importar el archivo", Toast.LENGTH_SHORT).show()
+                val mensaje = getString(R.string.mensaje_error)
+                Toast.makeText(this@AudioImportActivity, mensaje,
+                    Toast.LENGTH_SHORT).show()
                 finish()
             }
         }
@@ -99,12 +117,13 @@ class AudioImportActivity : AppCompatActivity() {
 
     private fun guardarAudioEnInterno(uri: Uri, nombre: String): String {
         // Creamos el archivo en el directorio interno de la app
+        val mensaje = getString(R.string.mensaje_excepcion)
         val destino = File(filesDir, "AUDIO_${System.currentTimeMillis()}_$nombre")
         contentResolver.openInputStream(uri)?.use { input ->
             destino.outputStream().use { output ->
                 input.copyTo(output)
             }
-        } ?: throw Exception("No se pudo abrir el flujo de entrada")
+        } ?: throw Exception(mensaje)
 
         return destino.absolutePath
     }

@@ -1,5 +1,6 @@
 package com.example.lectorlibros.util
 
+import android.R.attr.textSize
 import android.content.Context
 import android.graphics.*
 import android.graphics.pdf.PdfRenderer
@@ -10,7 +11,11 @@ import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import java.util.zip.ZipFile
 import android.graphics.BitmapFactory
-
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Rect
 object PortadaUtils {
 
     private val cache = ConcurrentHashMap<String, Bitmap?>()
@@ -34,9 +39,9 @@ object PortadaUtils {
             var rutaReal = uriString
             var file = File(uriString)
 
-            // 🔍 Buscar archivo si no existe directamente
+            // Buscar archivo si no existe directamente
             if (!file.exists()) {
-                Log.d("PortadaUtils", "🔍 Buscando archivo en rutas alternativas...")
+                Log.d("PortadaUtils", "Buscando archivo en rutas alternativas...")
 
                 val posiblesRutas = listOf(
                     File(context.filesDir, uriString),
@@ -56,7 +61,7 @@ object PortadaUtils {
                 }
             }
 
-            // 📦 Intentar assets
+            // Intentar assets
             if (!file.exists()) {
                 try {
                     val nombre = File(uriString).name
@@ -78,13 +83,13 @@ object PortadaUtils {
             }
 
             if (!file.exists()) {
-                Log.e("PortadaUtils", "❌ Archivo no existe")
+                Log.e("PortadaUtils", " Archivo no existe")
                 return null
             }
 
-            Log.d("PortadaUtils", "📂 Archivo OK: ${file.name}")
+            Log.d("PortadaUtils", " Archivo OK: ${file.name}")
 
-            // ✅ AQUÍ ESTÁ LA SOLUCIÓN REAL
+
             val fileDescriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
             val renderer = PdfRenderer(fileDescriptor)
 
@@ -164,7 +169,7 @@ object PortadaUtils {
         }
     }
 
-    fun obtenerPortadaAudio(uriAudio: String, anchoPx: Int = 300, altoPx: Int = 300): Bitmap? {
+    fun obtenerPortadaAudio(uriAudio: String, anchoPx: Int = 460, altoPx: Int = 550): Bitmap? {
         cache[uriAudio]?.let { return it }
 
         return try {
@@ -183,11 +188,13 @@ object PortadaUtils {
             Log.d("PortadaUtils", "Portada audio: ${bitmap != null}")
             bitmap
 
+
         } catch (e: Exception) {
             Log.e("PortadaUtils", "Error audio: ${e.message}", e)
             null
         }
     }
+
 
     fun limpiarCache() {
         cache.clear()

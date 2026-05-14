@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/rooPdf"
+    android:background="?attr/colorSurface"
     android:focusable="true"
     android:clickable="true">
 
@@ -38,4 +39,20 @@
         android:text="@string/página"
         android:textColor="@android:color/white"
         android:background="#80000000" />
+
+<!-- Botón de volver atrás  flotante -->
+    <ImageView
+        android:id="@+id/btnVolverAtras"
+        android:layout_width="24dp"
+        android:layout_height="35dp"
+        android:layout_gravity="top|start"
+        android:layout_margin="16dp"
+        android:padding="6dp"
+        android:src="@drawable/ic_volver_atras"
+        android:contentDescription="@string/volver_atras"
+        android:background="@color/colorBtnVolverAtras"
+        android:tint="@color/colorBotones"
+        android:elevation="30dp"
+        android:visibility="gone"
+        />
 </FrameLayout>

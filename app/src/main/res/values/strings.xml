@@ -1,11 +1,11 @@
 <resources>
     <string name="app_name">Leo</string>
-    <string name="titulo_pantalla">Biblioteca</string>
+    <string name="titulo_pantalla">Tu biblioteca</string>
     <string name="colecciones">Colecciones</string>
     <string name="descripcion">Menú</string>
     <string name="biblioteca">Biblioteca</string>
     <string name="leidos">Leídos</string>
-    <string name="opcion_audiolibros">Audiolibros</string>
+    <string name="opcion_audiolibros">Audiolibros </string>
     <string name="buscar">Buscar</string>
     <string name="menu">Menú</string>
     <string name="pdf">PDF</string>
@@ -35,12 +35,12 @@
     <string name="tiempoTotal">00:00</string>
     <string name="btnPause">Pause</string>
     <string name="btnPlay">Play</string>
-    <string name="faltaTitulo">Título desconocido</string>
-    <string name="nombreAutor">Autor desconocido</string>
+    <string name="titulo_desconocido">Título desconocido</string>
+    <string name="autor_desconocido">Autor desconocido</string>
     <string name="página"> 0 / 0 </string>
     <string name="indicador_pagina">Página %1$d de %2$d</string>
     <string name="estadoLibro">Nuevo</string>
-    <string name="bucar_libro">¿Cómo se llama el libro que buscas?</string>
+    <string name="bucar_libro">El libro se llama...</string>
     <string name="renombrar_libro">Renombrar...</string>
     <string name="eliminar_libro">Eliminar...</string>
     <string name="importar_libro">Importar...</string>
@@ -54,6 +54,7 @@
     <string name="descripcion_portada">Portada del libro</string>
     <string name="descripcion_stop">Parar la reproducción</string>
     <string name="descripcion_opciones">Opciones del libro</string>
+    <string name="descripcion_generales">Opciones generales</string>
     <string name="estado_leido">Leído</string>
     <string name="estado_nuevo">Nuevo</string>
     <string name="titulo_cambiado">Título cambiado</string>
@@ -64,4 +65,17 @@
     <string name="renombrar">Renombrar</string>
     <string name="mensaje_titulo_vacio">El título no puede estar vacío</string>
     <string name="mensaje_titulo_ya_existe">Ya existe un libro con ese título</string>
+    <string name="importar_audio">Importar audio</string>
+    <string name="importar_pdf">Importar pdf</string>
+    <string name="ya_existe">Ya existe un libro con el título</string>
+    <string name="libro_importado">Libro importado</string>
+    <string name="audiolibro_importado">Audiolibro importado</string>
+    <string name="error_recepcion_audio">Audio no recibido</string>
+    <string name="error_recepcion_pdf">PDF no recibido</string>
+    <string name="mensaje_excepcion">No se ha podido abrir el flujo de entrada</string>
+    <string name="formato_no_soportado">Formato no soportado</string>
+    <string name="epub_importado">EPUB importado</string>
+    <string name="futura_implementacion">Funcionalidad en desarrollo</string>
+    <string name="descripcion_boton_volver_atras">Botón Volver atrás</string>
+    <string name="volver_atras">Volver atrás</string>
 </resources>

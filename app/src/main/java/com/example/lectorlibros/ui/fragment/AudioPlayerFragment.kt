@@ -84,6 +84,18 @@ class AudioPlayerFragment(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Ocultamos la UI de MainActivity al entrar
+        val activity = activity as? MainActivity
+        activity?.binding?.bottomNavigation?.visibility = View.GONE
+        activity?.binding?.layoutColecciones?.visibility = View.GONE
+        activity?.binding?.ivMenu?.visibility = View.GONE
+        activity?.binding?.tvTitulo?.visibility = View.GONE
+        activity?.binding?.ivVolverAtras?.visibility = View.GONE
+
+        // Capturamos el botón de volver desde dentro del fragment
+        activity?.binding?.ivVolverAtras?.visibility = View.VISIBLE
+
+
         libroIdInterno = arguments?.getLong(ARG_LIBRO_ID) ?: -1L
 
         binding.imgCover.setOnClickListener {
@@ -161,7 +173,7 @@ class AudioPlayerFragment(
      * */
     private fun reinciarTemporizadorOcultar(){
         ocultarHandler.removeCallbacks(ocultarRunnable)
-        ocultarHandler.postDelayed(ocultarRunnable, 2000)
+        ocultarHandler.postDelayed(ocultarRunnable, 2000) // Programamos para que se oculte tras 2 segundos
     }
 
     /**
@@ -169,6 +181,12 @@ class AudioPlayerFragment(
      * */
     private fun alternarControles(){
         val bloqueControles = binding.playerControlsBlock
+        val activity = activity as? MainActivity
+        val bottomNav = activity?.binding?.bottomNavigation
+        val layoutColecciones = activity?.binding?.layoutColecciones
+        val ivMenu = activity?.binding?.ivMenu
+        val tvTitulo = activity?.binding?.tvTitulo
+
 
         if(controlesVisibles){
             // Ocultamos los controles al deslizar hacia abajo
@@ -177,9 +195,27 @@ class AudioPlayerFragment(
                 .alpha(0f)
                 .setDuration(300)
                 .withEndAction { bloqueControles.visibility = View.GONE }
+            bottomNav?.animate()?.alpha(0f)?.setDuration(300)?.withEndAction {
+                bottomNav.visibility = View.GONE }?.start()
+            layoutColecciones?.animate()?.alpha(0f)?.setDuration(300)?.withEndAction {
+                layoutColecciones.visibility = View.GONE }?.start()
+            ivMenu?.animate()?.alpha(0f)?.setDuration(300)?.withEndAction {
+                ivMenu.visibility = View.GONE }?.start()
+            tvTitulo?.animate()?.alpha(0f)?.setDuration(300)?.withEndAction {
+                tvTitulo.visibility = View.GONE }?.start()
         }else{
             // Mostramos los controles al deslizar hacia arriba
+            activity?.binding?.ivVolverAtras?.visibility = View.VISIBLE
+            activity?.binding?.ivVolverAtras?.animate()?.alpha(1f)?.setDuration(300)?.start()
             bloqueControles.visibility = View.VISIBLE
+            bloqueControles.animate().translationY(0f).alpha(1f).setDuration(300).start()
+            bottomNav?.visibility = View.VISIBLE
+            layoutColecciones?.visibility = View.VISIBLE
+            layoutColecciones?.animate()?.alpha(1f)?.setDuration(300)?.start()
+            ivMenu?.visibility = View.VISIBLE
+            ivMenu?.animate()?.alpha(1f)?.setDuration(300)?.start()
+            tvTitulo?.visibility = View.VISIBLE
+            tvTitulo?.animate()?.alpha(1f)?.setDuration(300)?.start()
             bloqueControles.animate()
                 .translationY(0f)
                 .alpha(1f)
@@ -316,7 +352,7 @@ class AudioPlayerFragment(
             mp.start()
             binding.btnPlayPause.setImageResource(R.drawable.ic_pause)
             _binding?.btnVolver?.visibility = View.GONE
-            _binding?.btnVolver?.visibility = View.VISIBLE
+            _binding?.btnVolver?.visibility = View.GONE
             startUpdatingUI()
         }
     }
@@ -344,7 +380,7 @@ class AudioPlayerFragment(
                         }
                     }
                 }
-                delay(1000)
+                delay(250) //hace que la corrutina espere ese tiempo
             }
         }
     }
@@ -389,7 +425,6 @@ class AudioPlayerFragment(
     }
 
     fun obtenerPortadaAudio(rutaAudio: String, ancho: Int, alto: Int): Bitmap? {
-        Log.d("BUG_PORTADA", "obtenerPortadaAudio - rutaAudio: '$rutaAudio'")
         val mmr = MediaMetadataRetriever()
         return try {
             if (rutaAudio.startsWith("content://")) {
@@ -404,32 +439,32 @@ class AudioPlayerFragment(
                     ?.scale(ancho, alto)
             } else null
         } catch (e: Exception) {
-            Log.e("AudioPlayer", "No se pudo obtener portada: ${e.message}", e)
+
             null
         } finally {
             try { mmr.release() } catch (_: Exception) {}
         }
     }
-    /* DESCOMENTAR SI ERROR O NECESIDAD fun obtenerPortadaAudio(rutaAudio: String, ancho: Int, alto: Int): Bitmap? {
-        return try {
-            val mmr = MediaMetadataRetriever()
-            mmr.setDataSource(rutaAudio)
-            val data = mmr.embeddedPicture
-            if (data != null) {
-                val original = BitmapFactory.decodeByteArray(data, 0, data.size)
-                original.scale(ancho, alto)
-            } else null
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }*/
+
 
     @RequiresApi(Build.VERSION_CODES.Q)
     override fun onDestroyView() {
+        // CANCELAMOS EL TEMPORIZADOR DEL HANDLER INMEDIATAMENTE
+        ocultarHandler.removeCallbacks(ocultarRunnable)
+        // Detenemos el MediaPlayer si sigue sonando
+        releaseMediaPlayer()
         val activity = activity as? MainActivity
+        // Restauramos todo al salir del reproductor
+        activity?.binding?.bottomNavigation?.visibility = View.VISIBLE
+        activity?.binding?.bottomNavigation?.alpha = 1f
+        activity?.binding?.tvTitulo?.visibility = View.VISIBLE
+        activity?.binding?.tvTitulo?.alpha = 1f
         activity?.binding?.ivMenu?.visibility = View.VISIBLE
+        activity?.binding?.ivMenu?.alpha = 1f
         activity?.binding?.layoutColecciones?.visibility = View.VISIBLE
+        activity?.binding?.layoutColecciones?.alpha = 1f
+        activity?.binding?.ivVolverAtras?.visibility = View.VISIBLE
+        activity?.binding?.ivVolverAtras?.alpha = 1f
         activity?.binding?.tvTitulo?.text = getString(R.string.app_name)
 
         mediaPlayer?.let {
@@ -441,6 +476,7 @@ class AudioPlayerFragment(
             }
             it.release()
         }
+
         mediaPlayer = null
         isPrepared = false
         stopUpdatingUI()

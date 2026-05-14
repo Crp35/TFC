@@ -17,6 +17,21 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"/>
 
+    <!-- Tres puntos (a la derecha) -->
+    <ImageView
+        android:id="@+id/ivOpcionesBiblioteca"
+        android:layout_width="25dp"
+        android:layout_height="22dp"
+        android:layout_marginEnd="8dp"
+        android:clickable="true"
+        android:contentDescription="@string/descripcion_generales"
+        android:focusable="true"
+        android:padding="1dp"
+        android:src="@drawable/ic_opciones_biblioteca"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/tvTitulo"
+        app:tint="@android:color/white" />
+
     <!-- CABECERA COLECCIONES -->
     <LinearLayout
         android:padding="16dp"
@@ -26,22 +41,36 @@
         android:orientation="horizontal"
         android:gravity="center_vertical"
         android:layout_marginTop="24dp"
-        android:clickable="true"
-        android:focusable="true"
+        android:clickable="false"
+        android:focusable="false"
         app:layout_constraintTop_toBottomOf="@id/tvTitulo"
         app:layout_constraintStart_toStartOf="parent">
+
+        <!-- Botón volver atrás -->
+        <ImageView
+            android:id="@+id/ivVolverAtras"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_volver_atras"
+            android:clickable="true"
+            android:focusable="true"
+            android:padding="2dp"
+            android:visibility="visible"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/volver_atras"
+            app:tint="@color/iconoColor"/>
 
         <ImageView
             android:id="@+id/ivMenu"
             android:layout_width="35dp"
             android:layout_height="30dp"
             android:clickable="true"
-            android:contentDescription="@string/descripcion"
             android:focusable="true"
             android:padding="2dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/menu"
-            app:tint="@color/iconoColor" />
+            android:contentDescription="@string/descripcion"
+            app:tint="@color/iconoColor"/>
 
         <TextView
             android:id="@+id/tvColecciones"

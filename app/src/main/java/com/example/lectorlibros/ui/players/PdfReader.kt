@@ -1,5 +1,6 @@
 package com.example.lectorlibros.ui.players
 
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
@@ -9,10 +10,11 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
-import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.lectorlibros.R
+import com.example.lectorlibros.databinding.ActivityMainBinding
+import com.example.lectorlibros.ui.activity.MainActivity
 import com.example.lectorlibros.util.PortadaUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,6 +24,8 @@ import java.io.File
 private const val ARG_URI_PDF = "uri_pdf"
 
 class PdfReader : Fragment() {
+
+    lateinit var binding: ActivityMainBinding
 
     private var uriPdf: String? = null
     private lateinit var imgPortada: ImageView
@@ -51,7 +55,13 @@ class PdfReader : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        Log.d("PdfReader", "onViewCreated iniciado")
+        // Al tocar el fondo del lector
+        binding.root.setOnClickListener {
+            // Solo ejecutamos la alternancia si estamos en horizontal
+            if(resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE){
+                (activity as? MainActivity)?.alternarControlesLectura()
+            }
+        }
 
         progressBar?.visibility = View.VISIBLE
         tvError?.visibility = View.GONE

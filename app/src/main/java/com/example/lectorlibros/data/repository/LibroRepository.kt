@@ -125,15 +125,12 @@ class LibroRepository(
     // Nuevo: obtener libro por id
     suspend fun getLibroById(id: Long): LibroEntity? = libroDao.getLibroById(id)
 
-    // -----------------------
     // POBLAR BD CON TODOS LOS AUDIOS DE RAW
-    // -----------------------
     suspend fun poblarBDDesdeRaw() = withContext(Dispatchers.IO) {
         // Lista de todos los audios de raw
         val todosLosAudiosRaw = arrayOf(
             R.raw.sutras,
-            // Agrega aquí más audios de raw según necesites
-            // R.raw.otro_audio
+
         )
 
         for (resId in todosLosAudiosRaw) {
@@ -146,7 +143,7 @@ class LibroRepository(
                 val titulo = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE)
                     ?: contexto.resources.getResourceEntryName(resId)  // fallback: nombre del recurso
                 val autor = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_AUTHOR)
-                    ?: contexto.getString(R.string.nombreAutor)
+                    ?: contexto.getString(R.string.autor_desconocido)
 
                 // Copiar archivo al sandbox
                 contexto.resources.openRawResource(resId).use { input ->
@@ -161,23 +158,10 @@ class LibroRepository(
             }
         }
     }
-
-    // -----------------------
-    // Función de prueba para insertar libros
-    // -----------------------
-    /*suspend fun pruebaInsertarLibros() {
-        if (libroDao.countLibrosTotalLibrosAudio() == 0) {
-            poblarBDDesdeRaw()
-
-            // PDF de prueba
-            insertLibro(
-                LibroEntity(
-                    titulo = "El principito",
-                    autor = "Antoine de Saint-Exupéry",
-                    tipoLibro = TipoDeLibro.PDF
-                )
-            )
+    suspend fun existeLibroConTitulo(titulo: String): Boolean {
+        return libroDao.getAllLibrosOnce().any {
+            it.titulo.equals(titulo, ignoreCase = true)
         }
-    }*/
+    }
 
 }
