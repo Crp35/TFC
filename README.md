@@ -129,4 +129,16 @@ Proyecto en desarrollo.
 
 ## Licencia
 
-Este proyecto se ha desarrollado con fines académicos y de aprendizaje.
+Copyright © 2026 Crispín Ondó Mayíe.
+
+Todos los derechos reservados.
+
+## Licencia
+
+Copyright © 2026 Leo (Gestor y lector de libros).Reader.
+
+Todos los derechos reservados. All rights reserved.
+
+No se permite la reproducción, distribución, modificación ni uso comercial de este software sin autorización previa y por escrito del autor.
+
+El código fuente se proporciona únicamente con fines de evaluación académica y portfolio profesional.
