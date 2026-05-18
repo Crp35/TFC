@@ -138,11 +138,6 @@ class ColeccionesFragment : Fragment() {
 
                     if (tipo == TipoColeccion.AUDIO) {
                         if (binding.rvColecciones.adapter !is AudioAdapter) {
-                            /*binding.rvColecciones.adapter = AudioAdapter { libro ->
-                                abrirLibro(libro)
-
-                            }*/
-
                             binding.rvColecciones.adapter = AudioAdapter(
                                 onItemClick = { libro -> abrirLibro(libro) },
                                 onItemLongClick = {  }
@@ -153,7 +148,6 @@ class ColeccionesFragment : Fragment() {
                         listaLibros.clear()
                         listaLibros.addAll(libros)
 
-                        // SOLUCIÓN: Pasar los 4 parámetros al constructor
                         binding.rvColecciones.adapter = LibrosAdapter(
                             listaLibros,
                             this@ColeccionesFragment,

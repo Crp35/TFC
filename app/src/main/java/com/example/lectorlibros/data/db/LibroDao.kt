@@ -103,7 +103,6 @@ interface LibroDao {
     @Query("SELECT * FROM libro WHERE titulo = :titulo LIMIT 1")
     suspend fun getLibro(titulo: String): LibroEntity?
 
-    //@Query("SELECT * FROM libro WHERE titulo LIKE '%' || :texto || '%'")
     @Query("SELECT * FROM libro WHERE titulo LIKE :texto COLLATE NOCASE")
     fun buscarLibrosPorTitulo(texto: String): Flow<List<LibroEntity>>
 

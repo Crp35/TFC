@@ -146,7 +146,6 @@ class PdfImportActivity : AppCompatActivity() {
             nombre = uri.path?.let { File(it).name }
         }
 
-        // Log para confirmar qué nombre se está leyendo
         return nombre
     }
 

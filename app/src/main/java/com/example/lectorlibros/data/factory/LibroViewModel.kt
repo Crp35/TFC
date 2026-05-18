@@ -66,7 +66,6 @@ class LibroViewModel(
         }
     }
 
-    // CORREGIDO (antes estaba duplicado/mal escrito en versiones anteriores)
     @RequiresApi(Build.VERSION_CODES.Q)
     fun buscarLibrosPorTituloSeguro(titulo: String): Flow<List<LibroEntity>> {
         return repository.buscarLibrosPorTitulo(titulo)

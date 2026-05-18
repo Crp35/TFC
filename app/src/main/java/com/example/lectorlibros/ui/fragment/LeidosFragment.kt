@@ -61,7 +61,7 @@ class LeidosFragment : Fragment() {
             servicioDescargaPdf = ServicioDescargaPdf(requireContext())
         )
 
-        // SOLUCIÓN: Inicialización con los 4 parámetros requeridos
+        // Inicialización con los 4 parámetros
         adapter = LibrosAdapter(
             emptyList<LibroEntity>(),
             this,

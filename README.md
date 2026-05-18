@@ -87,6 +87,8 @@ Además, se emplean:
 
 ```bash
 git clone https://github.com/Crp35/TFC.git
+
+Ubicación vídeo demo: https://drive.google.com/drive/folders/1vQIeiohuj7C_QFcnurVW7K9Y2cjRzKHJ?usp=drive_link
 ```
 
 ### 2. Abrir el proyecto

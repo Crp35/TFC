@@ -42,7 +42,7 @@ abstract class BaseDatos : RoomDatabase() {
                     BaseDatos::class.java,
                     "leo_db"
                 )
-                    .addMigrations(MIGRATION_4_5) // Agrega la migración aquí
+                    .addMigrations(MIGRATION_4_5)
                     .build()
                 INSTANCE = instance
                 instance
